@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario — s6s</title>
+    <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="pagina-dashboard pagina-inventario" data-isotipo="{{ASSET_ISOTIPO}}">
+    <header class="cabecera-dashboard">
+        <div class="logo-cabecera">
+            <a href="index.php?accion={{ACCION_DASHBOARD}}" class="logo-cabecera-enlace" title="Ir al inicio">
+                <img src="{{ASSET_ISOTIPO}}" alt="s6s Inicio" class="logo-cabecera-isotipo">
+            </a>
+        </div>
+        <button type="button" class="btn-menu-mobile" id="btn-menu-mobile" aria-expanded="false" aria-controls="nav-principal" aria-label="Abrir menú">Menú</button>
+        <nav class="nav-dashboard" id="nav-principal" aria-label="Navegación rápida">
+            <ul class="nav-secciones-cabecera">
+                <li><a href="index.php?accion=inventario" class="activo">Inventario</a></li>
+                <li><a href="index.php?accion=peticiones">Peticiones</a></li>
+                <li><a href="index.php?accion=wishlist">Wishlist</a></li>
+                {{ENLACE_ADMIN}}
+            </ul>
+            <span class="usuario-sesion">
+                <img src="{{ASSET_ISOTIPO}}" alt="" class="avatar-isotipo" aria-hidden="true">
+                {{NOMBRE_USUARIO}} <em>({{ROL_USUARIO}})</em>
+            </span>
+            <form method="post" action="index.php" class="form-logout">
+                <input type="hidden" name="accion" value="logout">
+                <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
+            </form>
+        </nav>
+    </header>
+    <main class="contenido-dashboard">
+        <h1>Inventario</h1>
+        <p class="subtitulo-pagina">Catálogo de recursos. Filtra por categoría para ver productos en tiempo real.</p>
+
+        <section class="filtros-inventario" aria-label="Filtros de categoría">
+            <div class="filtros-busqueda">
+                <label for="busqueda-inventario" class="visually-hidden">Buscar por nombre</label>
+                <input type="search" id="busqueda-inventario" placeholder="Buscar por nombre…" class="input-busqueda" aria-label="Buscar por nombre">
+            </div>
+            <span class="filtros-etiqueta">Categoría:</span>
+            <div class="filtros-botones" id="filtros-categoria">
+                <button type="button" class="boton boton-filtro boton-filtro-activo" data-categoria="">Todas</button>
+                {{LISTA_CATEGORIAS}}
+            </div>
+        </section>
+
+        <div class="contenedor-tarjetas" id="contenedor-tarjetas" role="list">
+            <p class="estado-carga" id="estado-carga" aria-live="polite">
+                <span class="spinner-isotipo-wrap" aria-hidden="true"><img src="{{ASSET_ISOTIPO}}" alt="" class="spinner-isotipo"></span>
+                <span class="estado-carga-texto">Cargando catálogo…</span>
+            </p>
+        </div>
+
+        <div class="modal-solicitar" id="modal-solicitar" hidden aria-modal="true" aria-labelledby="titulo-modal-solicitar" role="dialog">
+            <div class="modal-solicitar-contenido">
+                <h2 id="titulo-modal-solicitar">Solicitar material</h2>
+                <form id="form-solicitar">
+                    <label for="solicitar-producto">Producto</label>
+                    <select id="solicitar-producto" name="producto_id" required aria-required="true">
+                        <option value="">— Elige producto —</option>
+                    </select>
+                    <input type="hidden" id="solicitar-producto-id" name="producto_id_hidden">
+                    <label for="solicitar-unidades">Unidades</label>
+                    <input type="number" id="solicitar-unidades" name="unidades" min="1" value="1" required>
+                    <label for="solicitar-prioridad">Prioridad</label>
+                    <select id="solicitar-prioridad" name="prioridad">
+                        <option value="baja">Baja</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                    <label for="solicitar-motivo">Motivo</label>
+                    <textarea id="solicitar-motivo" name="motivo" rows="2"></textarea>
+                </form>
+                <div class="modal-botones">
+                    <button type="button" class="boton boton-secundario" id="solicitar-cerrar" aria-label="Cerrar sin enviar">Cancelar</button>
+                    <button type="submit" form="form-solicitar" class="boton boton-primario">Enviar solicitud</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    {{FOOTER}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/inventario.js"></script>
+</body>
+</html>

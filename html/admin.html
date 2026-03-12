@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración — s6s</title>
+    <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="pagina-dashboard" data-isotipo="{{ASSET_ISOTIPO}}">
+    <header class="cabecera-dashboard">
+        <div class="logo-cabecera">
+            <a href="index.php?accion={{ACCION_DASHBOARD}}" class="logo-cabecera-enlace" title="Ir al inicio">
+                <img src="{{ASSET_ISOTIPO}}" alt="s6s Inicio" class="logo-cabecera-isotipo">
+            </a>
+        </div>
+        <button type="button" class="btn-menu-mobile" id="btn-menu-mobile" aria-expanded="false" aria-controls="nav-principal" aria-label="Abrir menú">Menú</button>
+        <nav class="nav-dashboard" id="nav-principal">
+            <ul class="nav-secciones-cabecera" aria-label="Navegación rápida">
+                <li><a href="index.php?accion=inventario">Inventario</a></li>
+                <li><a href="index.php?accion=peticiones">Peticiones</a></li>
+                <li><a href="index.php?accion=wishlist">Wishlist</a></li>
+                <li><a href="index.php?accion=admin" class="activo">Administración</a></li>
+            </ul>
+            <span class="usuario-sesion">
+                <img src="{{ASSET_ISOTIPO}}" alt="" class="avatar-isotipo" aria-hidden="true">
+                {{NOMBRE_USUARIO}} <em>({{ROL_USUARIO}})</em>
+            </span>
+            <form method="post" action="index.php" class="form-logout">
+                <input type="hidden" name="accion" value="logout">
+                <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
+            </form>
+        </nav>
+    </header>
+    <main class="contenido-dashboard">
+        <h1>Administración</h1>
+        <p class="subtitulo-pagina">Gráficos con Chart.js y exportación a PDF (DomPDF).</p>
+
+        <section class="admin-resumen" aria-label="Resumen">
+            <div class="resumen-cards">
+                <div class="resumen-card">
+                    <span class="resumen-numero">{{TOTAL_PRODUCTOS}}</span>
+                    <span class="resumen-etiqueta">Productos activos</span>
+                </div>
+                <div class="resumen-card">
+                    <span class="resumen-numero">{{TOTAL_PEDIDOS}}</span>
+                    <span class="resumen-etiqueta">Total pedidos</span>
+                </div>
+                <div class="resumen-card resumen-card-alerta">
+                    <span class="resumen-numero">{{TOTAL_ALERTAS}}</span>
+                    <span class="resumen-etiqueta">Stock bajo umbral</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-graficos" aria-labelledby="titulo-graficos">
+            <h2 id="titulo-graficos">Estadísticas</h2>
+            <div class="grafico-wrapper">
+                <canvas id="grafico-categorias" width="400" height="250" aria-label="Productos por categoría"></canvas>
+            </div>
+            <div class="grafico-wrapper">
+                <canvas id="grafico-estados" width="400" height="250" aria-label="Pedidos por estado"></canvas>
+            </div>
+        </section>
+
+        {{BLOQUE_INFORMES_PDF}}
+
+        {{BLOQUE_GESTION_PRODUCTOS}}
+    </main>
+    {{FOOTER}}
+    <script type="application/json" id="datos-graficos">{{DATOS_GRAFICOS}}</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-productos.js"></script>
+</body>
+</html>
