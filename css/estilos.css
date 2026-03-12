@@ -172,7 +172,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
+    padding: 0 1.5rem;
+    min-height: 88px;
+    box-sizing: border-box;
     border-bottom: 1px solid var(--gris-borde);
     flex-wrap: wrap;
     gap: 1rem;
@@ -189,11 +191,12 @@ body {
     width: auto;
 }
 
-/* Isotipo en cabecera (PNG transparente) */
+/* Isotipo en cabecera (PNG transparente); tamaño dentro de barra fija para buena proporción */
 .logo-cabecera-isotipo {
     display: block;
-    height: 40px;
-    width: 40px;
+    height: 72px;
+    width: 72px;
+    max-height: 72px;
     object-fit: contain;
     transition: transform 0.2s ease;
 }

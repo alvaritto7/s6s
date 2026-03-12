@@ -207,16 +207,19 @@ class Api
         $this->responderJson(['categorias' => $lista]);
     }
 
-    /** Catálogo: productos (todos o filtrados por categoría). Solo activos. Incluye stock_disponible. */
+    /** Catálogo: productos (todos o filtrados por categoría). Solo activos por defecto; si admin y todos=1, devuelve todos. Incluye stock_disponible. */
     private function devolverProductos(): void
     {
         $categoria = $_GET['categoria'] ?? '';
+        $todos = isset($_GET['todos']) && (string) $_GET['todos'] === '1';
         if ($categoria !== '') {
             $productos = $this->bd->obtenerProductosPorCategoria($categoria);
         } else {
             $productos = $this->bd->obtenerProductos();
         }
-        $productos = array_values(array_filter($productos, fn($p) => ($p['activo'] ?? true) !== false));
+        if (!$todos || !$this->esAdministrador()) {
+            $productos = array_values(array_filter($productos, fn($p) => ($p['activo'] ?? true) !== false));
+        }
         foreach ($productos as &$p) {
             $id = (int) ($p['id'] ?? 0);
             $p['stock_disponible'] = $id > 0 ? $this->bd->obtenerStockDisponible($id) : (int) ($p['stock'] ?? 0);

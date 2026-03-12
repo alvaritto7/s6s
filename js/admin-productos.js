@@ -27,7 +27,7 @@
     }
 
     function cargarProductos() {
-        fetch(urlBase + '&recurso=productos', { credentials: 'same-origin' })
+        fetch(urlBase + '&recurso=productos&todos=1', { credentials: 'same-origin' })
             .then(function (respuesta) { return respuesta.json(); })
             .then(function (datos) {
                 var productos = datos.productos || [];
@@ -94,20 +94,31 @@
     }
 
     function abrirFormularioEdicion(id) {
-        fetch(urlBase + '&recurso=productos', { credentials: 'same-origin' })
+        var idNum = parseInt(id, 10);
+        if (!idNum) return;
+        fetch(urlBase + '&recurso=productos&todos=1', { credentials: 'same-origin' })
             .then(function (respuesta) { return respuesta.json(); })
             .then(function (datos) {
                 var productos = datos.productos || [];
-                var p = productos.filter(function (x) { return (x.id || 0) === id; })[0];
+                var p = productos.filter(function (x) { return Number(x.id) === idNum; })[0];
                 if (!p) return;
-                document.getElementById('producto-id').value = p.id;
+                document.getElementById('producto-id').value = String(p.id);
                 document.getElementById('producto-nombre').value = p.nombre || '';
                 document.getElementById('producto-descripcion').value = p.descripcion || '';
-                document.getElementById('producto-categoria_id').value = p.categoria_id || 1;
+                document.getElementById('producto-categoria_id').value = String(p.categoria_id || 1);
                 document.getElementById('producto-stock').value = p.stock || 0;
                 document.getElementById('producto-umbral_critico').value = p.umbral_critico || 0;
-                document.getElementById('producto-imagen').value = '';
-                if (wrapper) wrapper.hidden = false;
+                var imgInput = document.getElementById('producto-imagen');
+                if (imgInput) imgInput.value = '';
+                if (wrapper) {
+                    wrapper.hidden = false;
+                    wrapper.removeAttribute('hidden');
+                    var firstInput = document.getElementById('producto-nombre');
+                    if (firstInput) firstInput.focus();
+                }
+            })
+            .catch(function () {
+                if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: 'No se pudo cargar el producto.' }));
             });
     }
 
