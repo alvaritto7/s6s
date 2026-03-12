@@ -2,6 +2,8 @@
 
 **Para quién es este manual:** Cualquier persona que use la página, aunque no haya usado una web así antes. Cada pantalla y cada botón se explican paso a paso.
 
+**Diferencia con el otro manual:** Este es el **manual de uso** (usuario final). Para la documentación técnica del código (archivos, métodos, API, base de datos), ver **MANUAL_TECNICO.md**.
+
 **Importante:** Este documento debe actualizarse cada vez que se añada, quite o cambie algo en la aplicación (pantallas, botones, roles, mensajes). Así siempre tendrás un manual al día.
 
 ---
@@ -18,10 +20,11 @@
 8. [Peticiones](#8-peticiones)
 9. [Wishlist](#9-wishlist)
 10. [Administración](#10-administración)
-11. [Cerrar sesión](#11-cerrar-sesión)
-12. [Elementos que ves en todas las páginas](#12-elementos-que-ves-en-todas-las-páginas)
-13. [Mensajes que puede mostrar la página](#13-mensajes-que-puede-mostrar-la-página)
-14. [Historial de cambios del manual](#14-historial-de-cambios-del-manual)
+11. [Gestión de usuarios](#11-gestión-de-usuarios)
+12. [Cerrar sesión](#12-cerrar-sesión)
+13. [Elementos que ves en todas las páginas](#13-elementos-que-ves-en-todas-las-páginas)
+14. [Mensajes que puede mostrar la página](#14-mensajes-que-puede-mostrar-la-página)
+15. [Historial de cambios del manual](#15-historial-de-cambios-del-manual)
 
 ---
 
@@ -53,13 +56,13 @@ En s6s hay **tres roles**. Lo que puedes hacer depende de con cuál entres.
 |-----|-----------------|------------------|
 | **Empleado** | Cualquier usuario que se registre desde “Registro” | Ver **Inventario**, **Peticiones** y **Wishlist**. Pedir material, ver sus solicitudes, crear propuestas en la wishlist y votar. **No** ve el menú ni la página de **Administración**. |
 | **Staff** | Persona de almacén o revisión | Todo lo del empleado, **más**: entrar en **Administración** (solo ver resumen y gráficos), y en **Peticiones** puede **cambiar el estado** de las solicitudes (aprobar, denegar, marcar entregado, etc.). **No** puede exportar informes en PDF ni añadir/editar/desactivar productos del catálogo. |
-| **Administrador** | Responsable total del sistema | Todo lo del staff, **más**: en **Administración** puede **exportar PDFs** (inventario y pedidos) y **gestionar el catálogo de productos** (añadir, editar y desactivar productos). |
+| **Administrador** | Responsable total del sistema | Todo lo del staff, **más**: en **Administración** puede **exportar PDFs** (inventario y pedidos), **gestionar el catálogo de productos** (añadir, editar y desactivar productos) y acceder a **Gestión de usuarios** (cambiar rol, activar/desactivar y eliminar usuarios). |
 
 Resumen rápido:
 
 - **Empleado:** usar la app (inventario, peticiones, wishlist). Sin acceso a Administración.
 - **Staff:** usar la app + revisar y cambiar estados de pedidos + ver resumen y gráficos en Administración. Sin PDFs ni gestión de productos.
-- **Administrador:** todo lo anterior + exportar PDFs y gestionar productos (altas, ediciones, desactivar).
+- **Administrador:** todo lo anterior + exportar PDFs, gestionar productos (altas, ediciones, desactivar) y gestión de usuarios (cambiar rol, activar/desactivar, eliminar).
 
 ---
 
@@ -226,6 +229,7 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 - **Estadísticas:** dos gráficos (productos por categoría y pedidos por estado).
 - **Informes:** texto explicativo y dos botones: **“Inventario (PDF)”** y **“Pedidos (PDF)”** para descargar informes en PDF.
 - **Gestión de productos:** botón **“Añadir producto”**, formulario (nombre, descripción, categoría, stock, umbral crítico, imagen) y una **lista de productos** con botones **“Editar”** y **“Desactivar”** en cada uno. Al desactivar, la página pide **confirmación** antes de hacerlo.
+- **Gestión de usuarios:** un bloque con el enlace **“Ir a Gestión de usuarios”** que lleva a una página donde el administrador puede ver todos los usuarios y cambiar su rol, activar/desactivar la cuenta o eliminar usuarios (ver apartado 11).
 
 ### Si eres Staff
 
@@ -240,12 +244,36 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 2. **Añadir producto:** Pulsar **“Añadir producto”**, rellenar el formulario (nombre obligatorio, categoría obligatoria, resto opcional) y pulsar **“Guardar”**.
 3. **Editar producto:** Pulsar **“Editar”** en un producto de la lista, cambiar los datos en el formulario y pulsar **“Guardar”**.
 4. **Desactivar producto:** Pulsar **“Desactivar”**; confirmar en el mensaje que aparece. El producto deja de mostrarse en el catálogo pero no se borra de la base de datos.
+5. **Ir a Gestión de usuarios:** Pulsar **“Ir a Gestión de usuarios”** para abrir la página descrita en el apartado 11.
 
-Si un staff intenta exportar PDF o gestionar productos por la URL o por la API, recibirá un mensaje de que solo el administrador puede hacerlo.
+Si un staff intenta exportar PDF, gestionar productos o gestionar usuarios por la URL o por la API, recibirá un mensaje de que solo el administrador puede hacerlo.
 
 ---
 
-## 11. Cerrar sesión
+## 11. Gestión de usuarios
+
+**Qué es:** Página donde el **administrador** puede ver **todos los usuarios** de la aplicación y **cambiar su rol**, **activar o desactivar** la cuenta, o **eliminar** el usuario de forma definitiva.
+
+**Quién puede entrar:** Solo el **administrador**. El staff y el empleado no ven el enlace a esta página ni pueden abrirla (si intentan entrar por la URL, se les redirige al Dashboard).
+
+**Cómo llegar:** Desde **Administración** (apartado 10), en el bloque **“Gestión de usuarios”**, pulsar **“Ir a Gestión de usuarios”**. En el menú de la cabecera también aparece el enlace **“Gestión de usuarios”** cuando has iniciado sesión como administrador.
+
+**Qué ves:**
+
+- **Título:** “Gestión de usuarios” y un texto que explica que puedes cambiar rol, activar/desactivar y eliminar, y que no puedes eliminar ni desactivar tu propia cuenta.
+- **Tabla de usuarios:** cada fila muestra **ID**, **Email**, **Nombre**, **Rol** (desplegable: Empleado, Staff, Administrador), **Activo** (desplegable: Sí / No) y **Acciones** (botón **“Eliminar”**; en tu propia fila aparece “—” en lugar del botón).
+
+**Qué puedes hacer:**
+
+1. **Cambiar el rol:** En el desplegable **Rol** de cualquier usuario, elige **Empleado**, **Staff** o **Administrador**. Al cambiar, se guarda solo y aparece un mensaje de confirmación. El usuario afectado tendrá los nuevos permisos la próxima vez que inicie sesión (o en la misma sesión si ya está dentro).
+2. **Activar o desactivar:** En el desplegable **Activo** elige **Sí** o **No**. Si pones **No**, ese usuario **no podrá iniciar sesión** hasta que alguien le vuelva a activar. **No puedes desactivar tu propia cuenta** (en tu fila solo aparece “Sí (tú)”).
+3. **Eliminar usuario:** Pulsa **“Eliminar”** en la fila del usuario. La aplicación pide **confirmación** (“¿Eliminar usuario? Se eliminará de forma definitiva…”). Si confirmas, el usuario se borra de la base de datos y ya no podrá entrar. **No puedes eliminar tu propia cuenta** (en tu fila no hay botón Eliminar). Los pedidos o propuestas que haya creado ese usuario se mantienen en el sistema, pero asociados a un usuario ya inexistente.
+
+Si intentas desactivarte a ti mismo o eliminarte desde la API, verás un mensaje de error. Si no eres administrador y abres esta página por error, serás redirigido al inicio.
+
+---
+
+## 12. Cerrar sesión
 
 **Qué es:** Salir de tu cuenta para que nadie que use el mismo ordenador pueda seguir con tu sesión.
 
@@ -255,21 +283,21 @@ Si un staff intenta exportar PDF o gestionar productos por la URL o por la API, 
 
 ---
 
-## 12. Elementos que ves en todas las páginas
+## 13. Elementos que ves en todas las páginas
 
-Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishlist** y **Administración** verás siempre:
+Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishlist**, **Administración** y (solo administrador) **Gestión de usuarios** verás siempre:
 
 - **Cabecera (arriba):**
   - **Logo (isotipo):** al pulsarlo vas al **Dashboard** (página principal).
-  - **Menú:** enlaces a Inventario, Peticiones, Wishlist y, si te toca, Administración. El enlace de la página en la que estás suele verse resaltado (subrayado o en otro color).
+  - **Menú:** enlaces a Inventario, Peticiones, Wishlist, Administración y, si eres **administrador**, también **Gestión de usuarios**. El enlace de la página en la que estás suele verse resaltado (subrayado o en otro color).
   - **Tu nombre y rol:** por ejemplo “María García (empleado)”.
-  - **Cerrar sesión:** botón para salir de la sesión (ver apartado 11).
+  - **Cerrar sesión:** botón para salir de la sesión (ver apartado 12).
 - **En móvil o pantalla pequeña:** un botón **“Menú”** que abre/cierra el menú de navegación.
 - **Pie de página (abajo):** marca s6s, enlaces rápidos (Dashboard, Inventario, Peticiones, Wishlist) y datos del proyecto (autores, TFC DAW). No incluye enlace a Administración para no exponer esa zona; el acceso es solo por el menú si tienes permiso.
 
 ---
 
-## 13. Mensajes que puede mostrar la página
+## 14. Mensajes que puede mostrar la página
 
 - **Mensajes en rojo:** errores (credenciales incorrectas, email ya usado, contraseñas no coinciden, campos obligatorios, etc.).
 - **Mensajes en verde:** éxito (cuenta creada, solicitud enviada, estado actualizado, etc.).
@@ -280,7 +308,7 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 
 ---
 
-## 14. Historial de cambios del manual
+## 15. Historial de cambios del manual
 
 **Cómo mantener el manual al día:** Cada vez que en la aplicación se **añada** una pantalla, botón o funcionalidad, **se quite** algo o **se cambie** el comportamiento (por ejemplo permisos de roles), actualiza este documento en la sección correspondiente y añade una línea abajo con la fecha y el cambio.
 
@@ -288,4 +316,6 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 |------------|--------|
 | (fecha de hoy) | Creación del manual. Roles: empleado, staff, administrador. Páginas: Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Administración. Diferencias staff vs administrador (PDF y gestión de productos solo admin). Filtros, confirmaciones, mensajes de error de conexión, cerrar sesión por POST. |
 | (fecha de hoy) | Datos de prueba ampliados: 7 usuarios (1 admin, 1 staff, 5 empleados), 18 productos (varios con stock bajo umbral, 1 inactivo), 17 pedidos en todos los estados, 9 propuestas wishlist y múltiples votos. **Nota:** estos datos se insertan solo si la base está vacía al iniciar la app. Si ya tenías datos, para cargar los nuevos borra la base de datos en MySQL y vuelve a entrar (login) para que se recreen tablas y se inserten los datos de prueba. |
+| (fecha de hoy) | **Gestión de usuarios** (solo administrador): nueva página accesible desde Administración o desde el menú. Listado de usuarios con cambio de rol (empleado/staff/administrador), activar/desactivar cuenta (los desactivados no pueden iniciar sesión) y eliminar usuario. No se puede eliminar ni desactivar la propia cuenta. Manual actualizado con apartado 11 y renumeración de secciones. |
+| (fecha de hoy) | Añadida nota al inicio: este es el manual de **uso**; para documentación técnica del código ver **MANUAL_TECNICO.md**. |
 

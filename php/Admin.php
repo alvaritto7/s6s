@@ -50,6 +50,11 @@ class Admin
             ? '<section class="admin-productos" aria-labelledby="titulo-productos"><h2 id="titulo-productos">Gestión de productos</h2><button type="button" class="boton boton-primario" id="btn-abrir-form-producto">Añadir producto</button><div class="form-producto-wrapper" id="form-producto-wrapper" hidden><form id="form-producto" enctype="multipart/form-data"><input type="hidden" name="id" id="producto-id" value=""><label for="producto-nombre">Nombre</label><input type="text" id="producto-nombre" name="nombre" required maxlength="200"><label for="producto-descripcion">Descripción</label><input type="text" id="producto-descripcion" name="descripcion"><label for="producto-categoria_id">Categoría</label><select id="producto-categoria_id" name="categoria_id" required><option value="1">IT</option><option value="2">Mobiliario</option><option value="3">Consumibles</option></select><label for="producto-stock">Stock</label><input type="number" id="producto-stock" name="stock" min="0" value="0"><label for="producto-umbral_critico">Umbral crítico</label><input type="number" id="producto-umbral_critico" name="umbral_critico" min="0" value="0"><label for="producto-imagen">Imagen (opcional)</label><input type="file" id="producto-imagen" name="imagen" accept="image/*"><div class="form-producto-botones"><button type="button" class="boton boton-secundario" id="btn-cerrar-form-producto">Cancelar</button><button type="submit" class="boton boton-primario">Guardar</button></div></form></div><div id="lista-productos-admin" class="lista-productos-admin"></div></section>'
             : '<section class="admin-productos" aria-labelledby="titulo-productos"><h2 id="titulo-productos">Gestión de productos</h2><p class="color-gris">Solo el administrador puede añadir, editar o desactivar productos del catálogo.</p></section>';
 
+        $bloqueGestionUsuarios = $esAdministrador
+            ? '<section class="admin-gestion-usuarios" aria-labelledby="titulo-gestion-usuarios"><h2 id="titulo-gestion-usuarios">Gestión de usuarios</h2><p class="color-gris">Cambiar rol (empleado, staff, administrador), activar o desactivar cuentas y eliminar usuarios.</p><p><a href="index.php?accion=admin_usuarios" class="boton boton-primario">Ir a Gestión de usuarios</a></p></section>'
+            : '';
+        $enlaceGestionUsuarios = $esAdministrador ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
+
         $html = cargarPlantilla('html/admin.html', [
             'ASSET_ISOTIPO' => ASSET_ISOTIPO,
             'ASSET_FAVICON' => ASSET_FAVICON,
@@ -62,6 +67,8 @@ class Admin
             'DATOS_GRAFICOS' => $datosGraficos,
             'BLOQUE_INFORMES_PDF' => $bloqueInformesPdf,
             'BLOQUE_GESTION_PRODUCTOS' => $bloqueGestionProductos,
+            'BLOQUE_GESTION_USUARIOS' => $bloqueGestionUsuarios,
+            'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
             'FOOTER' => $footer,
         ]);
         echo $html;

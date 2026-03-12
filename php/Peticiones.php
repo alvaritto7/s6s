@@ -69,6 +69,7 @@ class Peticiones
 
         $puedeAdmin = ($rol === ROL_ADMINISTRADOR || $rol === ROL_STAFF);
         $enlaceAdmin = $puedeAdmin ? '<li><a href="index.php?accion=admin">Administración</a></li>' : '';
+        $enlaceGestionUsuarios = ($rol === ROL_ADMINISTRADOR) ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
         $footer = cargarPlantilla('html/componentes/footer.html', ['ANIO' => date('Y')]);
 
         $html = cargarPlantilla('html/peticiones.html', [
@@ -76,6 +77,7 @@ class Peticiones
             'ASSET_FAVICON' => ASSET_FAVICON,
             'ACCION_DASHBOARD' => ACCION_DASHBOARD,
             'ENLACE_ADMIN' => $enlaceAdmin,
+            'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
             'NOMBRE_USUARIO' => htmlspecialchars($nombreUsuario),
             'ROL_USUARIO' => htmlspecialchars($rol),
             'BLOQUE_STAFF_PENDIENTES' => $bloqueStaffPendientes,

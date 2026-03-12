@@ -338,6 +338,15 @@ class BaseDeDatos
         return $this->executeUpdate('UPDATE usuarios SET ' . implode(', ', $campos) . ' WHERE id = ?', $params);
     }
 
+    /**
+     * Elimina un usuario por ID. No comprueba integridad referencial (pedidos/propuestas quedan con usuario_id huérfano).
+     * No usar para el usuario actual en sesión; validar en el controlador.
+     */
+    public function eliminarUsuario(int $id): bool
+    {
+        return $this->executeUpdate('DELETE FROM usuarios WHERE id = ?', [$id]);
+    }
+
     // -------------------------------------------------------------------------
     // CATEGORÍAS
     // -------------------------------------------------------------------------

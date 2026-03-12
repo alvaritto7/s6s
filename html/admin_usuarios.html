@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist — s6s</title>
+    <title>Gestión de usuarios — s6s</title>
     <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
     <link rel="stylesheet" href="css/estilos.css">
 </head>
-<body class="pagina-dashboard" data-isotipo="{{ASSET_ISOTIPO}}">
+<body class="pagina-dashboard" data-isotipo="{{ASSET_ISOTIPO}}" data-usuario-id="{{USUARIO_ID}}">
     <header class="cabecera-dashboard">
         <div class="logo-cabecera">
             <a href="index.php?accion={{ACCION_DASHBOARD}}" class="logo-cabecera-enlace" title="Ir al inicio">
@@ -19,8 +19,9 @@
             <ul class="nav-secciones-cabecera" aria-label="Navegación rápida">
                 <li><a href="index.php?accion=inventario">Inventario</a></li>
                 <li><a href="index.php?accion=peticiones">Peticiones</a></li>
-                <li><a href="index.php?accion=wishlist" class="activo">Wishlist</a></li>
-                {{ENLACE_ADMIN}}{{ENLACE_GESTION_USUARIOS}}
+                <li><a href="index.php?accion=wishlist">Wishlist</a></li>
+                <li><a href="index.php?accion=admin">Administración</a></li>
+                <li><a href="index.php?accion=admin_usuarios" class="activo">Gestión de usuarios</a></li>
             </ul>
             <span class="usuario-sesion">
                 <img src="{{ASSET_ISOTIPO}}" alt="" class="avatar-isotipo" aria-hidden="true">
@@ -33,30 +34,18 @@
         </nav>
     </header>
     <main class="contenido-dashboard">
-        <h1>Wishlist</h1>
-        <p class="subtitulo-pagina">Propuestas de compra. Vota las que quieras priorizar (ranking por popularidad).</p>
+        <h1>Gestión de usuarios</h1>
+        <p class="subtitulo-pagina">Cambiar rol, activar o desactivar cuentas y eliminar usuarios. Solo el administrador puede acceder a esta página.</p>
 
-        <section class="form-nueva-propuesta" aria-labelledby="titulo-nueva-propuesta">
-            <h2 id="titulo-nueva-propuesta">Nueva propuesta</h2>
-            <form id="form-nueva-propuesta">
-                <label for="propuesta-titulo">Título (material que propones comprar)</label>
-                <input type="text" id="propuesta-titulo" name="titulo" required maxlength="200" placeholder="Ej: Monitor 27 pulgadas">
-                <label for="propuesta-descripcion">Descripción (opcional)</label>
-                <textarea id="propuesta-descripcion" name="descripcion" rows="2" placeholder="Motivo o enlace de referencia"></textarea>
-                <button type="submit" class="boton boton-primario">Crear propuesta</button>
-            </form>
+        <section class="admin-usuarios" aria-labelledby="titulo-lista-usuarios">
+            <h2 id="titulo-lista-usuarios">Usuarios de la aplicación</h2>
+            <p class="color-gris">Puedes ascender o degradar el rol (empleado, staff, administrador), activar/desactivar la cuenta (los desactivados no pueden iniciar sesión) o eliminar el usuario de forma definitiva. No puedes eliminar ni desactivar tu propia cuenta.</p>
+            <div id="lista-usuarios-admin" class="lista-usuarios-admin"></div>
         </section>
-
-        <div class="contenedor-propuestas" id="contenedor-propuestas" role="list">
-            <p class="estado-carga" id="estado-carga-wishlist" aria-live="polite">
-                <span class="spinner-isotipo-wrap" aria-hidden="true"><img src="{{ASSET_ISOTIPO}}" alt="" class="spinner-isotipo"></span>
-                <span class="estado-carga-texto">Cargando propuestas…</span>
-            </p>
-        </div>
     </main>
     {{FOOTER}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/nav.js"></script>
-    <script src="js/wishlist.js"></script>
+    <script src="js/admin-usuarios.js"></script>
 </body>
 </html>

@@ -1,31 +1,34 @@
 <?php
 /**
- * Controlador Wishlist — Tablón de propuestas de compra con sistema de votos.
- * La lista se puede refrescar por AJAX; la vista incluye el contenedor para el JS.
+ * Controlador Gestión de usuarios — Lista, cambiar rol, activar/desactivar, eliminar.
+ * Solo accesible para rol administrador.
  * Autores: Hugo Turrillo, Marcos Gutierrez, Álvaro Labrador
  */
 
 declare(strict_types=1);
 
-class Wishlist
+class GestionUsuarios
 {
     public function ejecutar(): void
     {
+        $rol = $_SESSION['usuario_rol'] ?? '';
+        if ($rol !== ROL_ADMINISTRADOR) {
+            header('Location: index.php?accion=' . ACCION_DASHBOARD);
+            exit;
+        }
+
         $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
         $rolUsuario = $_SESSION['usuario_rol'] ?? ROL_EMPLEADO;
-        $puedeAdmin = ($rolUsuario === ROL_ADMINISTRADOR || $rolUsuario === ROL_STAFF);
-        $enlaceAdmin = $puedeAdmin ? '<li><a href="index.php?accion=admin">Administración</a></li>' : '';
-        $enlaceGestionUsuarios = ($rolUsuario === ROL_ADMINISTRADOR) ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
         $footer = cargarPlantilla('html/componentes/footer.html', ['ANIO' => date('Y')]);
 
-        $html = cargarPlantilla('html/wishlist.html', [
+        $html = cargarPlantilla('html/admin_usuarios.html', [
             'ASSET_ISOTIPO' => ASSET_ISOTIPO,
             'ASSET_FAVICON' => ASSET_FAVICON,
             'ACCION_DASHBOARD' => ACCION_DASHBOARD,
-            'ENLACE_ADMIN' => $enlaceAdmin,
-            'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
             'NOMBRE_USUARIO' => htmlspecialchars($nombreUsuario),
             'ROL_USUARIO' => htmlspecialchars($rolUsuario),
+            'USUARIO_ID' => (string) $usuarioId,
             'FOOTER' => $footer,
         ]);
         echo $html;

@@ -90,5 +90,16 @@ if ($accion === ACCION_ADMIN) {
     exit;
 }
 
+if ($accion === ACCION_ADMIN_USUARIOS) {
+    $rol = $_SESSION['usuario_rol'] ?? '';
+    if ($rol !== ROL_ADMINISTRADOR) {
+        header('Location: index.php?accion=' . ACCION_DASHBOARD);
+        exit;
+    }
+    require_once RUTA_RAIZ . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'GestionUsuarios.php';
+    (new GestionUsuarios())->ejecutar();
+    exit;
+}
+
 header('Location: index.php?accion=' . ACCION_LOGIN);
 exit;

@@ -73,6 +73,18 @@ class Api
             case 'pdf_pedidos':
                 $this->generarPdfPedidos();
                 break;
+            case 'usuarios':
+                $this->devolverUsuarios();
+                break;
+            case 'usuario_actualizar_rol':
+                $this->procesarUsuarioActualizarRol();
+                break;
+            case 'usuario_actualizar_activo':
+                $this->procesarUsuarioActualizarActivo();
+                break;
+            case 'usuario_eliminar':
+                $this->procesarUsuarioEliminar();
+                break;
             default:
                 $this->responderJson(['error' => 'Recurso no válido', 'recurso' => $recurso], 400);
         }
@@ -504,5 +516,91 @@ class Api
             return '';
         }
         return 'imagenes/productos/' . $nombre;
+    }
+
+    // -------------------------------------------------------------------------
+    // Gestión de usuarios (solo administrador)
+    // -------------------------------------------------------------------------
+
+    /** Lista usuarios sin contraseña. Solo administrador. */
+    private function devolverUsuarios(): void
+    {
+        if (!$this->esAdministrador()) {
+            $this->responderJson(['error' => 'Solo el administrador puede gestionar usuarios', 'codigo' => 403], 403);
+            return;
+        }
+        $usuarios = $this->bd->obtenerUsuarios();
+        $lista = [];
+        foreach ($usuarios as $u) {
+            $lista[] = [
+                'id' => (int) $u['id'],
+                'email' => $u['email'] ?? '',
+                'nombre' => $u['nombre'] ?? '',
+                'rol' => $u['rol'] ?? ROL_EMPLEADO,
+                'activo' => (bool) ($u['activo'] ?? true),
+            ];
+        }
+        $this->responderJson(['usuarios' => $lista]);
+    }
+
+    /** Actualiza el rol de un usuario. Solo administrador. */
+    private function procesarUsuarioActualizarRol(): void
+    {
+        if (!$this->esAdministrador()) {
+            $this->responderJson(['error' => 'Solo el administrador puede gestionar usuarios', 'codigo' => 403], 403);
+            return;
+        }
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $rol = trim((string) ($_POST['rol'] ?? ''));
+        $rolesValidos = [ROL_EMPLEADO, ROL_STAFF, ROL_ADMINISTRADOR];
+        if ($id < 1 || !in_array($rol, $rolesValidos, true)) {
+            $this->responderJson(['error' => 'Datos inválidos', 'codigo' => 400], 400);
+            return;
+        }
+        $this->bd->actualizarUsuario($id, ['rol' => $rol]);
+        $this->responderJson(['ok' => true]);
+    }
+
+    /** Activa o desactiva un usuario. Solo administrador. */
+    private function procesarUsuarioActualizarActivo(): void
+    {
+        if (!$this->esAdministrador()) {
+            $this->responderJson(['error' => 'Solo el administrador puede gestionar usuarios', 'codigo' => 403], 403);
+            return;
+        }
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        $activo = isset($_POST['activo']) ? (bool) $_POST['activo'] : false;
+        if ($id < 1) {
+            $this->responderJson(['error' => 'Datos inválidos', 'codigo' => 400], 400);
+            return;
+        }
+        $usuarioActual = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($id === $usuarioActual) {
+            $this->responderJson(['error' => 'No puedes desactivar tu propia cuenta', 'codigo' => 400], 400);
+            return;
+        }
+        $this->bd->actualizarUsuario($id, ['activo' => $activo]);
+        $this->responderJson(['ok' => true]);
+    }
+
+    /** Elimina un usuario. Solo administrador. No puede eliminarse a sí mismo. */
+    private function procesarUsuarioEliminar(): void
+    {
+        if (!$this->esAdministrador()) {
+            $this->responderJson(['error' => 'Solo el administrador puede gestionar usuarios', 'codigo' => 403], 403);
+            return;
+        }
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        if ($id < 1) {
+            $this->responderJson(['error' => 'Datos inválidos', 'codigo' => 400], 400);
+            return;
+        }
+        $usuarioActual = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($id === $usuarioActual) {
+            $this->responderJson(['error' => 'No puedes eliminar tu propia cuenta', 'codigo' => 400], 400);
+            return;
+        }
+        $this->bd->eliminarUsuario($id);
+        $this->responderJson(['ok' => true]);
     }
 }

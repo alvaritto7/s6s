@@ -29,6 +29,7 @@ class Dashboard
             $bloqueAlertas = '<section class="alertas-dashboard tarjeta" aria-label="Alertas de stock"><h2 class="titulo-alertas"><span class="titulo-alertas-icono" aria-hidden="true">⚠</span> Stock bajo umbral crítico</h2><ul class="lista-alertas">' . $items . '</ul></section>';
         }
         $enlaceAdmin = $puedeAdmin ? '<li><a href="index.php?accion=admin">Administración</a></li>' : '';
+        $enlaceGestionUsuarios = ($rolUsuario === ROL_ADMINISTRADOR) ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
         $enlaceAdminCard = $puedeAdmin ? '<a href="index.php?accion=admin" class="dashboard-card dashboard-card-admin"><span class="dashboard-card-icono" aria-hidden="true">⚙</span><span class="dashboard-card-titulo">Administración</span><span class="dashboard-card-desc">Informes, productos y pedidos</span></a>' : '';
 
         $footer = cargarPlantilla('html/componentes/footer.html', ['ANIO' => date('Y')]);
@@ -38,6 +39,7 @@ class Dashboard
             'NOMBRE_USUARIO' => htmlspecialchars($nombreUsuario),
             'ROL_USUARIO' => htmlspecialchars($rolUsuario),
             'ENLACE_ADMIN' => $enlaceAdmin,
+            'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
             'BLOQUE_ALERTAS' => $bloqueAlertas,
             'ENLACE_ADMIN_CARD' => $enlaceAdminCard,
             'ALERTAS_CANTIDAD' => (string) count($alertasStock),
