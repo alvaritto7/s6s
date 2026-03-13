@@ -20,8 +20,6 @@
         var isotipo = document.body.getAttribute('data-isotipo');
         if (isotipo) {
             opciones.imageUrl = isotipo;
-            opciones.imageHeight = 60;
-            opciones.imageWidth = 60;
         }
         opciones.confirmButtonColor = '#00A3FF';
         return opciones;

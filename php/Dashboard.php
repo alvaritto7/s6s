@@ -24,7 +24,10 @@ class Dashboard
         if (!empty($alertasStock)) {
             $items = '';
             foreach ($alertasStock as $a) {
-                $items .= '<li>' . htmlspecialchars($a['nombre'] ?? '') . ' — Stock: <strong>' . (int) ($a['stock'] ?? 0) . '</strong> (umbral: ' . (int) ($a['umbral_critico'] ?? 0) . ')</li>';
+                $stock = (int) ($a['stock'] ?? 0);
+                $umbral = (int) ($a['umbral_critico'] ?? 0);
+                $extra = $stock === 0 ? ' <span class="texto-agotado">(Agotado)</span>' : '';
+                $items .= '<li>' . htmlspecialchars($a['nombre'] ?? '') . ' — Stock: <strong>' . $stock . '</strong>' . $extra . ' (umbral: ' . $umbral . ')</li>';
             }
             $bloqueAlertas = '<section class="alertas-dashboard tarjeta" aria-label="Alertas de stock"><h2 class="titulo-alertas"><span class="titulo-alertas-icono" aria-hidden="true">⚠</span> Stock bajo umbral crítico</h2><ul class="lista-alertas">' . $items . '</ul></section>';
         }

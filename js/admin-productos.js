@@ -29,8 +29,6 @@
         var iso = getIsotipoUrl();
         if (iso) {
             opciones.imageUrl = iso;
-            opciones.imageHeight = 60;
-            opciones.imageWidth = 60;
         }
         opciones.confirmButtonColor = '#00A3FF';
         return opciones;
@@ -49,9 +47,10 @@
                 var table = '<table class="tabla-productos"><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>';
                 productos.forEach(function (p) {
                     var activo = (p.activo !== false);
+                    var stock = p.stock || 0;
                     table += '<tr data-id="' + p.id + '">';
                     table += '<td>' + p.id + '</td><td>' + escapeHtml(p.nombre || '') + '</td>';
-                    table += '<td>' + (p.categoria_id || '') + '</td><td>' + (p.stock || 0) + '</td>';
+                    table += '<td>' + (p.categoria_id || '') + '</td><td>' + (stock === 0 ? '<span class="texto-agotado">0 (Agotado)</span>' : stock) + '</td>';
                     table += '<td><button type="button" class="boton boton-secundario btn-editar-producto" data-id="' + p.id + '">Editar</button> ';
                     if (activo) {
                         table += '<button type="button" class="boton boton-secundario btn-eliminar-producto" data-id="' + p.id + '" data-nombre="' + escapeHtml(p.nombre || '') + '">Desactivar</button>';

@@ -26,8 +26,6 @@
         var iso = getIsotipoUrl();
         if (iso) {
             opciones.imageUrl = iso;
-            opciones.imageHeight = 60;
-            opciones.imageWidth = 60;
         }
         opciones.confirmButtonColor = '#00A3FF';
         return opciones;

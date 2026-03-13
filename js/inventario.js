@@ -45,8 +45,15 @@
         var imagen = producto.imagen || '';
         var id = producto.id || '';
 
-        var esBajo = umbral > 0 && stock <= umbral;
-        var claseStock = esBajo ? 'tarjeta-stock-bajo' : '';
+        var sinStock = stock === 0;
+        // Solo se considera \"stock bajo\" (naranja) si queda algo (>0). Si es 0, será \"Agotado\" (rojo) con su propio borde.
+        var esBajo = !sinStock && umbral > 0 && stock <= umbral;
+        var claseStock = '';
+        if (sinStock) {
+            claseStock = 'tarjeta-agotado';
+        } else if (esBajo) {
+            claseStock = 'tarjeta-stock-bajo';
+        }
 
         var tarjeta = document.createElement('article');
         tarjeta.className = 'tarjeta-producto ' + claseStock;
@@ -67,6 +74,9 @@
         html += '<p class="tarjeta-stock">Stock: <strong>' + stock + '</strong> · Disponible: <strong>' + disponible + '</strong>';
         if (esBajo) {
             html += ' <span class="tarjeta-alerta">Stock bajo</span>';
+        }
+        if (sinStock) {
+            html += ' <span class="texto-agotado">Agotado</span>';
         }
         html += '</p>';
         if (esBajo) {
@@ -217,8 +227,6 @@
         var iso = getIsotipoUrl();
         if (iso) {
             opciones.imageUrl = iso;
-            opciones.imageHeight = 60;
-            opciones.imageWidth = 60;
         }
         opciones.confirmButtonColor = '#00A3FF';
         return opciones;

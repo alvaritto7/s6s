@@ -748,6 +748,17 @@ body {
     color: #ffb347;
 }
 
+.tarjeta-agotado {
+    border-color: rgba(255, 78, 80, 0.9);
+    box-shadow: 0 0 0 1px rgba(255, 78, 80, 0.5);
+}
+
+.texto-agotado {
+    color: #ff4e50;
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
 /* Barra de progreso de stock crítico dentro de la tarjeta */
 .barra-stock-critico {
     margin-top: 0.4rem;
@@ -1150,6 +1161,13 @@ body {
     background: var(--antracita) !important;
     border: 1px solid var(--gris-borde);
     color: var(--blanco);
+}
+
+.swal2-image {
+    height: 60px !important;
+    width: auto !important;
+    object-fit: contain;
+    margin-bottom: 0.75rem;
 }
 
 .swal2-title {
