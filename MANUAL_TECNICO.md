@@ -1,4 +1,4 @@
-﻿# Manual técnico — s6s (Intelligent Supply System)
+# Manual técnico — s6s (Intelligent Supply System)
 
 **Para quién es este manual:** Desarrolladores o personas que vayan a tocar el código. Explica **qué hace cada archivo**, **cada clase**, **cada método** y cómo se relacionan entre sí. No explica cómo usar la web como usuario (eso está en **MANUAL_USO.md**).
 
@@ -73,7 +73,20 @@ s6s/
 │   ├── admin-productos.js # CRUD productos (listar, añadir, editar, desactivar)
 │   └── admin-usuarios.js # Listar usuarios, cambiar rol, activo, eliminar
 ├── css/
-│   └── estilos.css       # Estilos globales
+│   ├── base.css          # Variables, reset, body, utilidades
+│   ├── componentes.css   # Botones, mensajes, badges, form-logout
+│   ├── auth.css          # Login y registro
+│   ├── cabecera-nav.css  # Cabecera sticky, nav, menú móvil
+│   ├── footer.css        # Pie de página
+│   ├── dashboard.css     # Hero, cards, alertas
+│   ├── inventario.css    # Filtros, tarjetas producto, modal solicitar
+│   ├── peticiones-wishlist.css # Listas, prioridad, propuestas
+│   ├── admin.css         # Resumen, gráficos, productos, upload
+│   ├── mi-cuenta.css     # Página Mi cuenta
+│   ├── librerias-externas.css # Sobrescrituras SweetAlert2 (tema oscuro)
+│   ├── otros.css         # Ajustes puntuales
+│   ├── estilos.css       # @import de todos (compatibilidad)
+│   └── manual-css.md     # Manual del CSS (lista de módulos)
 └── imagenes/             # logotipo_transparente.png, isotipo_transparente.png, etc.
 ```
 
@@ -385,7 +398,22 @@ Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, 
 
 ## 11. CSS
 
-**css/estilos.css** contiene los estilos globales de la aplicación: cabecera, navegación, tarjetas del dashboard, formularios, tablas, botones, mensajes de error/éxito, estados de carga, pie de página, estilos para badges de estado (pendiente, en_revision, etc.), **badges de prioridad** (`.badge-prioridad-alta`, `.badge-prioridad-normal`, `.badge-prioridad-baja`) y responsive (menú móvil con .nav-abierto). No se documenta cada regla aquí; el archivo es único y centralizado.
+Los estilos están **divididos por objetivo** en varios archivos dentro de `css/`. Cada plantilla HTML enlaza solo los que necesita (base, componentes, cabecera-nav, footer, etc.), en ese orden. Ver `css/manual-css.md` para la lista completa.
+
+- **base.css**: variables (`:root`), reset, `body`, `.visually-hidden`, `.color-gris`.
+- **componentes.css**: botones, mensajes error/éxito, badges genéricos, form-logout.
+- **auth.css**: login y registro.
+- **cabecera-nav.css**: cabecera sticky (reducida al scroll), isotipo, nav, menú móvil, usuario-sesión.
+- **footer.css**: pie de página.
+- **dashboard.css**: hero, cards de sección, alertas.
+- **inventario.css**: filtros, tarjetas producto, skeleton, modal solicitar.
+- **peticiones-wishlist.css**: listas peticiones/propuestas, badges prioridad, formularios nueva solicitud/propuesta.
+- **admin.css**: resumen, gráficos, gestión productos, upload, tabla productos.
+- **mi-cuenta.css**: página Mi cuenta.
+- **librerias-externas.css**: sobrescrituras para librerías de terceros (SweetAlert2, tema oscuro).
+- **otros.css**: ajustes puntuales (p. ej. `.pagina-login .pie-pagina`).
+
+**estilos.css** reexporta todos vía `@import` por compatibilidad; las plantillas usan los enlaces directos a cada módulo.
 
 ---
 
@@ -400,4 +428,6 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 | (fecha de hoy) | **Mi cuenta:** nueva acción `ACCION_MI_CUENTA`, controlador `MiCuenta.php`, plantilla `html/mi_cuenta.html`, script `mi-cuenta.js`. API: GET `mi_perfil` (nombre, email, rol) y POST `actualizar_perfil` (nombre y/o password_actual + password_nueva). Enlace "Mi cuenta" en la cabecera de todas las páginas internas. **Wishlist:** en `devolverPropuestas` se añade `es_mia` por propuesta; en `wishlist.js` y CSS se muestra la etiqueta "Tu propuesta" y la clase `.item-propuesta-mia`. |
 | (fecha de hoy) | **Wishlist — quitar voto:** `BaseDeDatos::eliminarVoto(int $propuestaId, int $usuarioId)`. API POST `quitar_voto` (propuesta_id) → `procesarQuitarVoto()`. En `wishlist.js`: botón "Quitar voto", función `quitarVoto()` y `enlazarBotonesQuitarVoto()`; actualización en caliente del contador y del bloque de acciones. |
 | (fecha de hoy) | **Peticiones:** en `Peticiones.php` se construye mapa de nombres de usuarios y cada ítem muestra **solicitante** (nombre) en lugar de #id. Prioridad como badge con clases `badge-prioridad-alta|normal|baja`. CSS: `.peticion-solicitante`, `.badge-prioridad-*` (colores alta/normal/baja). Sin número de pedido en la vista; identificación por nombre del solicitante. |
+| (fecha de hoy) | **CSS reestructurado:** estilos divididos en `base.css`, `componentes.css`, `auth.css`, `cabecera-nav.css`, `footer.css`, `dashboard.css`, `inventario.css`, `peticiones-wishlist.css`, `admin.css`, `mi-cuenta.css`, `librerias-externas.css`, `otros.css`. Cada plantilla HTML enlaza los módulos que necesita. `estilos.css` pasa a ser un punto de entrada con `@import`. Documentación del CSS en `css/manual-css.md`. Ver sección 11. |
+| (fecha de hoy) | **CSS:** `css/README.md` renombrado a `css/manual-css.md`. `third-party.css` renombrado a `librerias-externas.css` (sobrescrituras para librerías de terceros). Actualizada sección 11 y árbol del proyecto. |
 

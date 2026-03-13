@@ -1,0 +1,42 @@
+/**
+ * base.css — Variables, reset y estilos base del proyecto s6s.
+ * Identidad: Antracita, Blanco, Azul Eléctrico.
+ */
+
+:root {
+    --antracita: #1A1A1B;
+    --blanco: #FFFFFF;
+    --azul-electrico: #00A3FF;
+    --gris-texto: #B0B0B0;
+    --gris-borde: #2A2A2B;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--antracita);
+    color: var(--blanco);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+}
+
+.color-gris {
+    color: var(--gris-texto);
+}

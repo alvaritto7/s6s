@@ -1,0 +1,95 @@
+/**
+ * footer.css — Pie de página.
+ */
+
+.pie-pagina {
+    margin-top: auto;
+    border-top: 2px solid var(--gris-borde);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.pie-contenido {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem 3rem;
+    padding: 2rem 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.pie-columna {
+    min-width: 140px;
+}
+
+.pie-logo {
+    display: block;
+    max-width: 180px;
+    height: auto;
+    margin-bottom: 0.3rem;
+}
+
+.pie-marca .pie-nombre {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--azul-electrico);
+    letter-spacing: 0.02em;
+}
+
+.pie-marca .pie-tagline {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--gris-texto);
+}
+
+.pie-titulo-col {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gris-texto);
+    margin-bottom: 0.75rem;
+}
+
+.pie-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pie-lista a {
+    color: var(--gris-texto);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.15s ease;
+}
+
+.pie-lista a:hover {
+    color: var(--azul-electrico);
+}
+
+.pie-lista li {
+    margin-bottom: 0.4rem;
+}
+
+.pie-proyecto .pie-autores,
+.pie-proyecto .pie-daw {
+    margin: 0 0 0.25rem;
+    font-size: 0.85rem;
+    color: var(--gris-texto);
+}
+
+.pie-copy {
+    padding: 1rem 1.5rem;
+    text-align: center;
+    border-top: 1px solid var(--gris-borde);
+}
+
+.pie-copy p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--gris-texto);
+    opacity: 0.9;
+}

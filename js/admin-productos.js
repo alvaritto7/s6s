@@ -10,8 +10,52 @@
     var lista = document.getElementById('lista-productos-admin');
     var btnAbrir = document.getElementById('btn-abrir-form-producto');
     var btnCerrar = document.getElementById('btn-cerrar-form-producto');
+    var uploadZone = document.getElementById('upload-zone-imagen');
+    var uploadFilename = document.getElementById('upload-filename');
+    var inputImagen = document.getElementById('producto-imagen');
 
     if (!lista || !form) return;
+
+    function actualizarNombreArchivo() {
+        if (!uploadFilename || !inputImagen) return;
+        var file = inputImagen.files && inputImagen.files[0];
+        if (file) {
+            uploadFilename.textContent = file.name;
+            if (uploadZone) uploadZone.classList.add('has-file');
+        } else {
+            uploadFilename.textContent = '';
+            if (uploadZone) uploadZone.classList.remove('has-file');
+        }
+    }
+
+    if (inputImagen) {
+        inputImagen.addEventListener('change', actualizarNombreArchivo);
+    }
+    if (uploadZone && form) {
+        form.addEventListener('reset', function () {
+            setTimeout(actualizarNombreArchivo, 0);
+        });
+        uploadZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.add('upload-zone-dragover');
+        });
+        uploadZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('upload-zone-dragover');
+        });
+        uploadZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('upload-zone-dragover');
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (inputImagen && files && files.length) {
+                inputImagen.files = files;
+                actualizarNombreArchivo();
+            }
+        });
+    }
 
     var urlBase = 'index.php?accion=api';
     var categoriasCache = [];
@@ -119,6 +163,7 @@
                 document.getElementById('producto-umbral_critico').value = p.umbral_critico || 0;
                 var imgInput = document.getElementById('producto-imagen');
                 if (imgInput) imgInput.value = '';
+                actualizarNombreArchivo();
                 if (wrapper) {
                     wrapper.hidden = false;
                     wrapper.removeAttribute('hidden');
@@ -156,6 +201,7 @@
         btnAbrir.addEventListener('click', function () {
             document.getElementById('producto-id').value = '';
             form.reset();
+            actualizarNombreArchivo();
             wrapper.hidden = false;
         });
     }
