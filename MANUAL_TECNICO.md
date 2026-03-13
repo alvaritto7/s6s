@@ -44,9 +44,9 @@ s6s/
 │   ├── Inventario.php    # Página del catálogo (productos por categoría)
 │   ├── Peticiones.php    # Página de solicitudes y revisión (staff/admin)
 │   ├── Wishlist.php      # Página de propuestas y votos
-│   ├── Admin.php         # Panel administración (gráficos, PDF, productos; staff/admin)
+│   ├── Admin.php         # Panel administración (gráficos, informes, productos; staff/admin)
 │   ├── GestionUsuarios.php # Página gestión de usuarios (solo administrador)
-│   └── Api.php           # Respuestas JSON y PDF; recurso en GET/POST
+│   └── Api.php           # Respuestas JSON y HTML (informes); recurso en GET/POST
 ├── html/
 │   ├── login.html
 │   ├── registro.html
@@ -84,7 +84,7 @@ s6s/
 4. Según el valor de `$accion`, hace una de estas cosas:
    - **logout:** Solo si el método es POST, llama a `Login::cerrarSesion()` y termina.
    - Si el usuario **está logueado** y pide `login`, `registro` o acción vacía → redirige a **dashboard**.
-   - **api:** Carga `Api.php` y ejecuta `(new Api())->ejecutar()`. La API devuelve JSON (o PDF) y termina; no se carga ninguna plantilla HTML.
+- **api:** Carga `Api.php` y ejecuta `(new Api())->ejecutar()`. La API devuelve JSON (para las pantallas) o HTML (para los informes) y termina; no se carga ninguna plantilla HTML adicional.
    - Si el usuario **no está logueado** y la acción no es `login` ni `registro` → redirige a **login**.
    - **registro** → carga `Registro.php` y ejecuta `ejecutar()`.
    - **login** → carga `Login.php` y ejecuta `ejecutar()`.
@@ -206,7 +206,7 @@ Al final del archivo se hace `require_once` de **php/Plantillas.php**, para que 
 - **`actualizarProducto(int $id, array $datosActualizados): bool`** — UPDATE de campos permitidos: nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo.
 - **`eliminarProducto(int $id): bool`** — En realidad pone `activo = 0` (soft delete).
 - **`obtenerProductosBajoUmbral(): array`** — Productos con `activo=1`, `umbral_critico > 0` y `stock <= umbral_critico`.
-- **`obtenerPrecioUnitarioSimulado(int $productoId): float`** — Devuelve un **precio unitario simulado** (no está en la BD) según una tabla en PHP. Se usa en los informes PDF para calcular el valor económico del inventario y el consumo por pedidos. Si el producto no está en la tabla, devuelve un precio por defecto.
+- **`obtenerPrecioUnitarioSimulado(int $productoId): float`** — Devuelve un **precio unitario simulado** (no está en la BD) según una tabla en PHP. Se usa en los informes HTML para calcular el valor económico del inventario y el consumo por pedidos. Si el producto no está en la tabla, devuelve un precio por defecto.
 
 **Métodos públicos — Pedidos:**
 
@@ -279,7 +279,7 @@ Cada controlador se instancia desde **index.php** y se llama a **`ejecutar()`**.
 
 ### Admin.php
 
-- **`ejecutar(): void`** — Si el rol no es administrador ni staff, redirige a dashboard. Obtiene productos, categorías, pedidos, alertas; calcula totales y datos para gráficos (porCategoria, porEstado). Según si es administrador o no, construye `$bloqueInformesPdf` (botones PDF o mensaje “solo administrador”), `$bloqueGestionProductos` (formulario y lista o mensaje), `$bloqueGestionUsuarios` (enlace a admin_usuarios o vacío). Carga `html/admin.html` con TOTAL_PRODUCTOS, TOTAL_PEDIDOS, TOTAL_ALERTAS, DATOS_GRAFICOS, BLOQUE_*, FOOTER. Los gráficos se dibujan con Chart.js en admin.js; los productos se gestionan con admin-productos.js (API producto_crear, producto_actualizar, producto_eliminar).
+- **`ejecutar(): void`** — Si el rol no es administrador ni staff, redirige a dashboard. Obtiene productos, categorías, pedidos, alertas; calcula totales y datos para gráficos (porCategoria, porEstado). Según si es administrador o no, construye el bloque de informes (botones a los informes HTML o mensaje “solo administrador”), `$bloqueGestionProductos` (formulario y lista o mensaje), `$bloqueGestionUsuarios` (enlace a admin_usuarios o vacío). Carga `html/admin.html` con TOTAL_PRODUCTOS, TOTAL_PEDIDOS, TOTAL_ALERTAS, DATOS_GRAFICOS, BLOQUE_*, FOOTER. Los gráficos se dibujan con Chart.js en admin.js; los productos se gestionan con admin-productos.js (API producto_crear, producto_actualizar, producto_eliminar).
 
 ### GestionUsuarios.php
 
@@ -327,7 +327,7 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 **Métodos privados adicionales:**
 
 - `subirImagenProducto(string $nombreCampo): string` — Procesa el archivo subido en `$_FILES[$nombreCampo]`, redimensiona con GD si está disponible y guarda en `imagenes/productos/`; devuelve la ruta relativa o cadena vacía.
-- `resolverDepartamentoSimulado(array $usuario): string` — A partir del email y rol de un usuario devuelve un “departamento” simulado (Dirección, Almacén / Logística, IT, Finanzas, General) que se usa en el PDF de pedidos para agrupar el consumo mensual por departamento.
+- `resolverDepartamentoSimulado(array $usuario): string` — A partir del email y rol de un usuario devuelve un “departamento” simulado (Dirección, Almacén / Logística, IT, Finanzas, General) que se usa en el informe de pedidos para agrupar el consumo mensual por departamento.
 
 ---
 
@@ -381,5 +381,5 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 | Fecha       | Cambio |
 |------------|--------|
 | (fecha de hoy) | Creación del manual técnico. Documentados: estructura del proyecto, index.php, configuracion.php, Plantillas.php, BaseDeDatos (esquema y métodos), controladores Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Admin, GestionUsuarios, Api (todos los recursos), plantillas HTML, JS y CSS. Diferenciación clara con MANUAL_USO.md. |
-| (fecha de hoy) | Añadidos: `BaseDeDatos::obtenerPrecioUnitarioSimulado()` para tener un precio_unitario simulado sin cambiar el esquema de BD; API `devolverProductos` con soporte `todos=1` para que el admin vea también productos inactivos; `Api::resolverDepartamentoSimulado()` y lógica de **resumen de consumo mensual por departamento** en `generarPdfPedidos()`. Actualizados los PDFs de inventario y pedidos con cabeceras corporativas (logo completo arriba derecha y línea azul) y valor económico. Documentadas las barras de stock crítico en `inventario.js`/CSS y la actualización en caliente del botón de votos en `wishlist.js`. |
+| (fecha de hoy) | Añadidos: `BaseDeDatos::obtenerPrecioUnitarioSimulado()` para tener un precio_unitario simulado sin cambiar el esquema de BD; API `devolverProductos` con soporte `todos=1` para que el admin vea también productos inactivos; `Api::resolverDepartamentoSimulado()` y lógica de **resumen de consumo mensual por departamento** en `generarPdfPedidos()`. Actualizados los informes HTML de inventario y pedidos con cabeceras corporativas (logo completo arriba derecha y línea azul) y valor económico. Documentadas las barras de stock crítico en `inventario.js`/CSS y la actualización en caliente del botón de votos en `wishlist.js`. |
 

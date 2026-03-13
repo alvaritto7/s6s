@@ -55,14 +55,14 @@ En s6s hay **tres roles**. Lo que puedes hacer depende de con cuál entres.
 | Rol | Quién suele ser | Qué puede hacer |
 |-----|-----------------|------------------|
 | **Empleado** | Cualquier usuario que se registre desde “Registro” | Ver **Inventario**, **Peticiones** y **Wishlist**. Pedir material, ver sus solicitudes, crear propuestas en la wishlist y votar. **No** ve el menú ni la página de **Administración**. |
-| **Staff** | Persona de almacén o revisión | Todo lo del empleado, **más**: entrar en **Administración** (solo ver resumen y gráficos), y en **Peticiones** puede **cambiar el estado** de las solicitudes (aprobar, denegar, marcar entregado, etc.). **No** puede exportar informes en PDF ni añadir/editar/desactivar productos del catálogo. |
-| **Administrador** | Responsable total del sistema | Todo lo del staff, **más**: en **Administración** puede **exportar PDFs** (inventario y pedidos), **gestionar el catálogo de productos** (añadir, editar y desactivar productos) y acceder a **Gestión de usuarios** (cambiar rol, activar/desactivar y eliminar usuarios). |
+| **Staff** | Persona de almacén o revisión | Todo lo del empleado, **más**: entrar en **Administración** (solo ver resumen y gráficos), y en **Peticiones** puede **cambiar el estado** de las solicitudes (aprobar, denegar, marcar entregado, etc.). **No** puede ver ni generar los informes de inventario/pedidos ni añadir/editar/desactivar productos del catálogo. |
+| **Administrador** | Responsable total del sistema | Todo lo del staff, **más**: en **Administración** puede **ver y generar informes** de inventario y pedidos (en HTML imprimible), **gestionar el catálogo de productos** (añadir, editar y desactivar productos) y acceder a **Gestión de usuarios** (cambiar rol, activar/desactivar y eliminar usuarios). |
 
 Resumen rápido:
 
 - **Empleado:** usar la app (inventario, peticiones, wishlist). Sin acceso a Administración.
-- **Staff:** usar la app + revisar y cambiar estados de pedidos + ver resumen y gráficos en Administración. Sin PDFs ni gestión de productos.
-- **Administrador:** todo lo anterior + exportar PDFs, gestionar productos (altas, ediciones, desactivar) y gestión de usuarios (cambiar rol, activar/desactivar, eliminar).
+- **Staff:** usar la app + revisar y cambiar estados de pedidos + ver resumen y gráficos en Administración. Sin informes ni gestión de productos.
+- **Administrador:** todo lo anterior + ver/generar informes, gestionar productos (altas, ediciones, desactivar) y gestión de usuarios (cambiar rol, activar/desactivar, eliminar).
 
 ---
 
@@ -237,7 +237,7 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 
 - **Resumen:** las mismas tres tarjetas (productos activos, total pedidos, stock bajo umbral).
 - **Estadísticas:** los mismos dos gráficos.
-- **Informes:** mismo título pero con el texto **“Solo el administrador puede exportar informes en PDF”** (no hay botones de descarga).
+- **Informes:** mismo título pero con el texto **“Solo el administrador puede ver y generar informes de inventario y pedidos”** (no hay botones de descarga).
 - **Gestión de productos:** mismo título pero con el texto **“Solo el administrador puede añadir, editar o desactivar productos del catálogo”** (no hay formulario ni lista de productos).
 
 **Qué puede hacer solo el Administrador aquí:**
@@ -251,7 +251,7 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 4. **Desactivar producto:** Pulsar **“Desactivar”**; confirmar en el mensaje que aparece. El producto deja de mostrarse en el catálogo pero no se borra de la base de datos.
 5. **Ir a Gestión de usuarios:** Pulsar **“Ir a Gestión de usuarios”** para abrir la página descrita en el apartado 11.
 
-Si un staff intenta exportar PDF, gestionar productos o gestionar usuarios por la URL o por la API, recibirá un mensaje de que solo el administrador puede hacerlo.
+Si un staff intenta acceder a los informes, gestionar productos o gestionar usuarios por la URL o por la API, recibirá un mensaje de que solo el administrador puede hacerlo.
 
 ---
 
@@ -319,7 +319,7 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 
 | Fecha       | Cambio |
 |------------|--------|
-| (fecha de hoy) | Creación del manual. Roles: empleado, staff, administrador. Páginas: Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Administración. Diferencias staff vs administrador (PDF y gestión de productos solo admin). Filtros, confirmaciones, mensajes de error de conexión, cerrar sesión por POST. |
+| (fecha de hoy) | Creación del manual. Roles: empleado, staff, administrador. Páginas: Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Administración. Diferencias staff vs administrador (informes y gestión de productos solo admin). Filtros, confirmaciones, mensajes de error de conexión, cerrar sesión por POST. |
 | (fecha de hoy) | Datos de prueba ampliados: 7 usuarios (1 admin, 1 staff, 5 empleados), 18 productos (varios con stock bajo umbral, 1 inactivo), 17 pedidos en todos los estados, 9 propuestas wishlist y múltiples votos. **Nota:** estos datos se insertan solo si la base está vacía al iniciar la app. Si ya tenías datos, para cargar los nuevos borra la base de datos en MySQL y vuelve a entrar (login) para que se recreen tablas y se inserten los datos de prueba. |
 | (fecha de hoy) | **Gestión de usuarios** (solo administrador): nueva página accesible desde Administración o desde el menú. Listado de usuarios con cambio de rol (empleado/staff/administrador), activar/desactivar cuenta (los desactivados no pueden iniciar sesión) y eliminar usuario. No se puede eliminar ni desactivar la propia cuenta. Manual actualizado con apartado 11 y renumeración de secciones. |
 | (fecha de hoy) | Añadida nota al inicio: este es el manual de **uso**; para documentación técnica del código ver **MANUAL_TECNICO.md**. |
