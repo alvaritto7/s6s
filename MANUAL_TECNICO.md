@@ -1,4 +1,4 @@
-# Manual técnico — s6s (Intelligent Supply System)
+﻿# Manual técnico — s6s (Intelligent Supply System)
 
 **Para quién es este manual:** Desarrolladores o personas que vayan a tocar el código. Explica **qué hace cada archivo**, **cada clase**, **cada método** y cómo se relacionan entre sí. No explica cómo usar la web como usuario (eso está en **MANUAL_USO.md**).
 
@@ -277,7 +277,7 @@ Cada controlador se instancia desde **index.php** y se llama a **`ejecutar()`**.
 
 ### Peticiones.php
 
-- **`ejecutar(): void`** — Obtiene pedidos del usuario y, si es staff o admin, pedidos por estado pendiente y en_revision. Construye bloques HTML para “Pendientes (pasar a revisión)” y “En revisión (staff)” con botones de acción (data-estado, data-pedido-id). Construye lista de “Mis solicitudes”. Carga `html/peticiones.html` con BLOQUE_STAFF_PENDIENTES, BLOQUE_STAFF_REVISION, LISTA_MIS_PETICIONES, etc. Los cambios de estado se envían por JS a la API (`cambiar_estado_pedido`).
+- **`ejecutar(): void`** — Obtiene pedidos del usuario y, si es staff o admin, pedidos por estado pendiente y en_revision. Construye un mapa de nombres de usuarios; en cada ítem se muestra el **solicitante** (nombre, o «Tú» en Mis solicitudes), producto, unidades, **prioridad** como badge (badge-prioridad-alta|normal|baja), estado; no se muestra número de pedido (#id) en la vista. Bloques para Pendientes y En revisión con botones (data-estado, data-pedido-id); lista Mis solicitudes con motivo, estado, fecha. Carga `html/peticiones.html` con BLOQUE_STAFF_PENDIENTES, BLOQUE_STAFF_REVISION, LISTA_MIS_PETICIONES, etc. Los cambios de estado se envían por JS a la API (`cambiar_estado_pedido`).
 
 ### Wishlist.php
 
@@ -385,7 +385,7 @@ Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, 
 
 ## 11. CSS
 
-**css/estilos.css** contiene los estilos globales de la aplicación: cabecera, navegación, tarjetas del dashboard, formularios, tablas, botones, mensajes de error/éxito, estados de carga, pie de página, estilos para badges de estado (pendiente, en_revision, etc.) y responsive (menú móvil con .nav-abierto). No se documenta cada regla aquí; el archivo es único y centralizado.
+**css/estilos.css** contiene los estilos globales de la aplicación: cabecera, navegación, tarjetas del dashboard, formularios, tablas, botones, mensajes de error/éxito, estados de carga, pie de página, estilos para badges de estado (pendiente, en_revision, etc.), **badges de prioridad** (`.badge-prioridad-alta`, `.badge-prioridad-normal`, `.badge-prioridad-baja`) y responsive (menú móvil con .nav-abierto). No se documenta cada regla aquí; el archivo es único y centralizado.
 
 ---
 
@@ -399,4 +399,5 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 | (fecha de hoy) | Añadidos: `BaseDeDatos::obtenerPrecioUnitarioSimulado()` para tener un precio_unitario simulado sin cambiar el esquema de BD; API `devolverProductos` con soporte `todos=1` para que el admin vea también productos inactivos; `Api::resolverDepartamentoSimulado()` y lógica de **resumen de consumo mensual por departamento** en `generarPdfPedidos()`. Actualizados los informes HTML de inventario y pedidos con cabeceras corporativas (logo completo arriba derecha y línea azul) y valor económico. Documentadas las barras de stock crítico en `inventario.js`/CSS y la actualización en caliente del botón de votos en `wishlist.js`. |
 | (fecha de hoy) | **Mi cuenta:** nueva acción `ACCION_MI_CUENTA`, controlador `MiCuenta.php`, plantilla `html/mi_cuenta.html`, script `mi-cuenta.js`. API: GET `mi_perfil` (nombre, email, rol) y POST `actualizar_perfil` (nombre y/o password_actual + password_nueva). Enlace "Mi cuenta" en la cabecera de todas las páginas internas. **Wishlist:** en `devolverPropuestas` se añade `es_mia` por propuesta; en `wishlist.js` y CSS se muestra la etiqueta "Tu propuesta" y la clase `.item-propuesta-mia`. |
 | (fecha de hoy) | **Wishlist — quitar voto:** `BaseDeDatos::eliminarVoto(int $propuestaId, int $usuarioId)`. API POST `quitar_voto` (propuesta_id) → `procesarQuitarVoto()`. En `wishlist.js`: botón "Quitar voto", función `quitarVoto()` y `enlazarBotonesQuitarVoto()`; actualización en caliente del contador y del bloque de acciones. |
+| (fecha de hoy) | **Peticiones:** en `Peticiones.php` se construye mapa de nombres de usuarios y cada ítem muestra **solicitante** (nombre) en lugar de #id. Prioridad como badge con clases `badge-prioridad-alta|normal|baja`. CSS: `.peticion-solicitante`, `.badge-prioridad-*` (colores alta/normal/baja). Sin número de pedido en la vista; identificación por nombre del solicitante. |
 

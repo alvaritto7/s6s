@@ -42,6 +42,25 @@ class Admin
         $datosGraficos = json_encode(['categorias' => $porCategoria, 'estados' => $porEstado]);
         $footer = cargarPlantilla('html/componentes/footer.html', ['ANIO' => date('Y')]);
 
+        $bloqueAlertasAdmin = '';
+        if (!empty($alertasStock)) {
+            $items = '';
+            $limite = 12;
+            $mostrados = array_slice($alertasStock, 0, $limite);
+            foreach ($mostrados as $a) {
+                $nombre = htmlspecialchars($a['nombre'] ?? '');
+                $stock = (int) ($a['stock'] ?? 0);
+                $umbral = (int) ($a['umbral_critico'] ?? 0);
+                $clase = $stock === 0 ? 'alerta-item agotado' : 'alerta-item';
+                $items .= '<li class="' . $clase . '"><span class="alerta-nombre">' . $nombre . '</span><span class="alerta-datos">' . $stock . ' / ' . $umbral . '</span></li>';
+            }
+            $resto = count($alertasStock) - $limite;
+            $mas = $resto > 0 ? '<p class="admin-alertas-mas">y ' . $resto . ' más</p>' : '';
+            $bloqueAlertasAdmin = '<ul class="lista-alertas-admin">' . $items . '</ul>' . $mas;
+        } else {
+            $bloqueAlertasAdmin = '<p class="color-gris admin-alertas-vacio">Ningún producto bajo umbral.</p>';
+        }
+
         $esAdministrador = ($rol === ROL_ADMINISTRADOR);
         $bloqueInformesPdf = $esAdministrador
             ? '<section class="admin-informes" aria-labelledby="titulo-informes"><h2 id="titulo-informes">Informes</h2><p class="color-gris">Informes de inventario y pedidos listos para imprimir o guardar como PDF desde el navegador.</p><div class="admin-informes-botones"><a href="index.php?accion=api&amp;recurso=pdf_inventario" class="boton boton-primario" target="_blank" rel="noopener">Inventario (informe)</a><a href="index.php?accion=api&amp;recurso=pdf_pedidos" class="boton boton-primario" target="_blank" rel="noopener">Pedidos (informe)</a></div></section>'
@@ -66,6 +85,7 @@ class Admin
             'TOTAL_PEDIDOS' => (string) $totalPedidos,
             'TOTAL_ALERTAS' => (string) $totalAlertas,
             'DATOS_GRAFICOS' => $datosGraficos,
+            'BLOQUE_ALERTAS_ADMIN' => $bloqueAlertasAdmin,
             'BLOQUE_INFORMES_PDF' => $bloqueInformesPdf,
             'BLOQUE_GESTION_PRODUCTOS' => $bloqueGestionProductos,
             'BLOQUE_GESTION_USUARIOS' => $bloqueGestionUsuarios,

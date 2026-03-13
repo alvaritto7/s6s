@@ -176,10 +176,12 @@ Si no hay conexión o falla algo, la página mostrará un mensaje de error (por 
 
 - **Título** y texto explicando los estados (Pendiente → En Revisión → Aprobado/Denegado → Entregado).
 - Si eres **staff o administrador:**
-  - **“Pendientes (pasar a revisión)”:** lista de solicitudes en estado *pendiente* con botón **“Pasar a revisión”**.
-  - **“En revisión (staff)”:** lista de solicitudes *en revisión* con botones **“Aprobar”**, **“Denegar”** y **“Marcar entregado”**.
+  - **“Pendientes (pasar a revisión)”:** lista de solicitudes en estado *pendiente*. Cada línea muestra **quién la pidió** (nombre del solicitante), producto, unidades, **prioridad** (con color: Alta en rojo, Normal en azul, Baja en verde) y botón **“Pasar a revisión”**.
+  - **“En revisión (staff)”:** lista de solicitudes *en revisión* con el mismo formato (solicitante, producto, unidades, prioridad) y botones **“Aprobar”**, **“Denegar”** y **“Marcar entregado”**.
 - **“Nueva solicitud”:** formulario para pedir material desde esta página (producto, unidades, prioridad, motivo) y botón **“Enviar solicitud”**.
-- **“Mis solicitudes”:** lista de **tus** solicitudes con filtros por estado: **Todas**, **Pendiente**, **En revisión**, **Aprobado**, **Denegado**, **Entregado**.
+- **“Mis solicitudes”:** lista de **tus** solicitudes (cada línea empieza por **“Tú”**, luego producto, unidades, prioridad con color, motivo, estado y fecha). Filtros por estado: **Todas**, **Pendiente**, **En revisión**, **Aprobado**, **Denegado**, **Entregado**.
+
+Las listas **no muestran número de pedido** (#1, #2…); se identifica cada petición por el nombre de quien la hizo, para evitar confusión cuando se aceptan o eliminan solicitudes.
 
 **Qué puedes hacer (todos):**
 
@@ -349,4 +351,5 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 | (fecha de hoy) | Inventario: tarjetas de productos en **stock crítico** con aviso “Stock bajo”, borde ligeramente anaranjado y barra de color rojo/naranja que indica visualmente lo cerca que está el stock del umbral crítico. Informes: informes de Inventario y Pedidos en HTML con cabecera corporativa (logo arriba a la derecha y línea azul), valor económico total del inventario y resumen mensual de consumo por departamento; se pueden imprimir o guardar como PDF desde el navegador. Wishlist: al votar, el botón pasa a **“Votado”** sin recargar la página. SweetAlert2: cuadros de diálogo de confirmación y éxito usando el isotipo de s6s como icono. |
 | (fecha de hoy) | **Mi cuenta:** nueva página accesible desde el menú para todos los usuarios. Permite ver nombre, email y rol; editar el nombre (Guardar nombre) y cambiar la contraseña (contraseña actual + nueva + repetición). Wishlist: las propuestas creadas por el usuario actual muestran la etiqueta **"Tu propuesta"** en azul para identificarlas. |
 | (fecha de hoy) | **Wishlist:** añadida la opción **"Quitar voto"**. Si ya has votado una propuesta, aparece el botón "Quitar voto" junto a "Votado"; al pulsarlo se retira tu voto (el contador baja y vuelve a mostrarse "Votar") sin recargar la página. |
+| (fecha de hoy) | **Peticiones:** en todas las listas se muestra **quién hace la petición** (nombre del solicitante; en "Mis solicitudes" aparece "Tú"). La **prioridad** se ve con badges de color: Alta (rojo), Normal (azul), Baja (verde). Eliminado el número de pedido (#1, #2…) de la vista; cada línea se identifica por el nombre del solicitante. |
 

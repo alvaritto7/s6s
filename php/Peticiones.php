@@ -28,15 +28,35 @@ class Peticiones
         foreach ($bd->obtenerProductos() as $prod) {
             $nombresProductos[(int) ($prod['id'] ?? 0)] = $prod['nombre'] ?? 'ID ' . ($prod['id'] ?? '');
         }
+        $nombresUsuarios = [];
+        foreach ($bd->obtenerUsuarios() as $u) {
+            $nombresUsuarios[(int) ($u['id'] ?? 0)] = $u['nombre'] ?? $u['email'] ?? 'Usuario #' . ($u['id'] ?? '');
+        }
+
+        $prioridadLabels = ['alta' => 'Alta', 'normal' => 'Normal', 'baja' => 'Baja'];
+        $prioridadClass = function ($p) {
+            $pr = strtolower(trim((string) ($p['prioridad'] ?? 'normal')));
+            if (!in_array($pr, ['alta', 'normal', 'baja'], true)) {
+                $pr = 'normal';
+            }
+            return 'badge-prioridad badge-prioridad-' . $pr;
+        };
+        $prioridadHtml = function ($p) use ($prioridadLabels, $prioridadClass) {
+            $pr = strtolower(trim((string) ($p['prioridad'] ?? 'normal')));
+            $label = $prioridadLabels[$pr] ?? $prioridadLabels['normal'];
+            return '<span class="' . $prioridadClass($p) . '">' . htmlspecialchars($label) . '</span>';
+        };
 
         $bloqueStaffPendientes = '';
         if (!empty($pendientesPendientes)) {
             $items = '';
             foreach ($pendientesPendientes as $p) {
                 $pid = (int) ($p['id'] ?? 0);
+                $uid = (int) ($p['usuario_id'] ?? 0);
+                $solicitante = $nombresUsuarios[$uid] ?? 'Usuario #' . $uid;
                 $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
                 $estadoSlug = htmlspecialchars(str_replace('_', '-', $p['estado'] ?? ''));
-                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><strong>#' . $pid . '</strong> — ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado" data-estado="en_revision">Pasar a revisión</button></div></li>';
+                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado" data-estado="en_revision">Pasar a revisión</button></div></li>';
             }
             $bloqueStaffPendientes = '<section class="bloque-peticiones" aria-labelledby="titulo-pendientes"><h2 id="titulo-pendientes">Pendientes (pasar a revisión)</h2><ul class="lista-peticiones" id="lista-pendientes">' . $items . '</ul></section>';
         }
@@ -46,9 +66,11 @@ class Peticiones
             $items = '';
             foreach ($pendientesRevision as $p) {
                 $pid = (int) ($p['id'] ?? 0);
+                $uid = (int) ($p['usuario_id'] ?? 0);
+                $solicitante = $nombresUsuarios[$uid] ?? 'Usuario #' . $uid;
                 $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
                 $estadoSlug = htmlspecialchars(str_replace('_', '-', $p['estado'] ?? ''));
-                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><strong>#' . $pid . '</strong> — ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · Prioridad: ' . htmlspecialchars($p['prioridad'] ?? '') . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado boton-aprobar" data-estado="aprobado">Aprobar</button><button type="button" class="boton boton-secundario boton-estado boton-denegar" data-estado="denegado">Denegar</button><button type="button" class="boton boton-estado boton-entregado" data-estado="entregado">Marcar entregado</button></div></li>';
+                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado boton-aprobar" data-estado="aprobado">Aprobar</button><button type="button" class="boton boton-secundario boton-estado boton-denegar" data-estado="denegado">Denegar</button><button type="button" class="boton boton-estado boton-entregado" data-estado="entregado">Marcar entregado</button></div></li>';
             }
             $bloqueStaffRevision = '<section class="bloque-peticiones" aria-labelledby="titulo-revision"><h2 id="titulo-revision">En revisión (staff)</h2><ul class="lista-peticiones" id="lista-revision">' . $items . '</ul></section>';
         }
@@ -62,7 +84,7 @@ class Peticiones
                 $estadoRaw = $p['estado'] ?? '';
                 $estadoSlug = htmlspecialchars(str_replace('_', '-', $estadoRaw));
                 $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
-                $items .= '<li class="item-peticion" data-estado="' . htmlspecialchars($estadoRaw) . '"><strong>#' . (int) ($p['id'] ?? 0) . '</strong> — ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · Motivo: ' . htmlspecialchars($p['motivo'] ?? '') . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($estadoRaw) . '</span> · ' . htmlspecialchars($p['fecha_creacion'] ?? '') . '</li>';
+                $items .= '<li class="item-peticion" data-estado="' . htmlspecialchars($estadoRaw) . '" data-pedido-id="' . (int) ($p['id'] ?? 0) . '"><span class="peticion-solicitante">Tú</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . ' · Motivo: ' . htmlspecialchars($p['motivo'] ?? '') . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($estadoRaw) . '</span> · ' . htmlspecialchars($p['fecha_creacion'] ?? '') . '</li>';
             }
             $listaMisPeticiones = '<ul class="lista-peticiones">' . $items . '</ul>';
         }

@@ -36,7 +36,7 @@
     </header>
     <main class="contenido-dashboard">
         <h1>Administración</h1>
-        <p class="subtitulo-pagina">Gráficos con Chart.js y exportación a PDF (DomPDF).</p>
+        <p class="subtitulo-pagina">Gráficos</p>
 
         <section class="admin-resumen" aria-label="Resumen">
             <div class="resumen-cards">
@@ -57,11 +57,17 @@
 
         <section class="admin-graficos" aria-labelledby="titulo-graficos">
             <h2 id="titulo-graficos">Estadísticas</h2>
-            <div class="grafico-wrapper">
-                <canvas id="grafico-categorias" width="400" height="250" aria-label="Productos por categoría"></canvas>
-            </div>
-            <div class="grafico-wrapper">
-                <canvas id="grafico-estados" width="400" height="250" aria-label="Pedidos por estado"></canvas>
+            <div class="admin-graficos-grid">
+                <div class="grafico-wrapper">
+                    <canvas id="grafico-categorias" width="400" height="250" aria-label="Productos por categoría"></canvas>
+                </div>
+                <div class="grafico-wrapper">
+                    <canvas id="grafico-estados" width="400" height="250" aria-label="Pedidos por estado"></canvas>
+                </div>
+                <div class="admin-panel-alertas" aria-labelledby="titulo-panel-alertas">
+                    <h3 id="titulo-panel-alertas">Productos en alerta</h3>
+                    {{BLOQUE_ALERTAS_ADMIN}}
+                </div>
             </div>
         </section>
 

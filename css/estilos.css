@@ -906,6 +906,37 @@ body {
     color: var(--azul-electrico);
 }
 
+.peticion-solicitante {
+    font-weight: 600;
+    color: var(--azul-electrico);
+}
+
+/* Prioridad en peticiones: alta / normal / baja */
+.badge-prioridad {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.badge-prioridad-alta {
+    background: rgba(220, 53, 69, 0.25);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.5);
+}
+.badge-prioridad-normal {
+    background: rgba(0, 163, 255, 0.15);
+    color: #5eb8f0;
+    border: 1px solid rgba(0, 163, 255, 0.35);
+}
+.badge-prioridad-baja {
+    background: rgba(40, 167, 69, 0.15);
+    color: #6bc98a;
+    border: 1px solid rgba(40, 167, 69, 0.35);
+}
+
 .propuesta-acciones {
     display: flex;
     flex-wrap: wrap;
@@ -1131,12 +1162,85 @@ body {
 
 .admin-graficos {
     margin: 2rem 0;
-    max-width: 600px;
+}
+
+.admin-graficos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr minmax(220px, 280px);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .admin-graficos-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .grafico-wrapper {
-    margin: 1.5rem 0;
-    max-width: 400px;
+    margin: 0;
+    min-height: 220px;
+}
+
+.admin-panel-alertas {
+    background: rgba(255, 78, 80, 0.06);
+    border: 1px solid rgba(255, 78, 80, 0.25);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    position: sticky;
+    top: 1rem;
+}
+
+.admin-panel-alertas h3 {
+    font-size: 0.95rem;
+    color: #e85555;
+    margin: 0 0 0.75rem 0;
+    font-weight: 600;
+}
+
+.lista-alertas-admin {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.alerta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 78, 80, 0.15);
+    font-size: 0.85rem;
+}
+
+.alerta-item:last-child {
+    border-bottom: none;
+}
+
+.alerta-item.agotado .alerta-nombre { color: #ff6b6b; font-weight: 600; }
+.alerta-item.agotado .alerta-datos { color: #ff4444; }
+
+.alerta-nombre {
+    color: var(--gris-texto);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.alerta-datos {
+    color: var(--azul-electrico);
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.admin-alertas-vacio,
+.admin-alertas-mas {
+    font-size: 0.85rem;
+    color: var(--gris-texto);
+    margin: 0.5rem 0 0 0;
 }
 
 .admin-informes {
