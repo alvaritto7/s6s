@@ -196,7 +196,8 @@ Al final del archivo se hace `require_once` de **php/Plantillas.php**, para que 
 | **categorias** | id, nombre, slug (único) |
 | **productos** | id, nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo |
 | **pedidos** | id, usuario_id, producto_id, unidades, prioridad (baja/normal/alta), motivo, estado (pendiente/en_revision/aprobado/denegado/entregado), fecha_creacion, fecha_actualizacion |
-| **propuestas_wishlist** | id, titulo, descripcion, usuario_id, fecha_creacion |
+| **propuestas_wishlist** | id, titulo, descripcion, estado (varchar: en_estudio, aceptada, descartada; por defecto en_estudio), usuario_id, fecha_creacion |
+| **comentarios_propuesta** | id, propuesta_id, usuario_id, texto, fecha_creacion, fecha_actualizacion |
 | **votos** | id, propuesta_id, usuario_id, fecha; UNIQUE(propuesta_id, usuario_id) |
 
 **Métodos públicos — Usuarios:**
@@ -247,7 +248,17 @@ Al final del archivo se hace `require_once` de **php/Plantillas.php**, para que 
 - **`usuarioYaVoto(int $propuestaId, int $usuarioId): bool`** — True si ya existe voto.
 - **`insertarVoto(int $propuestaId, int $usuarioId): bool`** — INSERT voto si no existe; devuelve false si ya votó.
 - **`eliminarVoto(int $propuestaId, int $usuarioId): bool`** — DELETE del voto del usuario en esa propuesta; devuelve true si se eliminó.
-- **`obtenerPropuestasOrdenadasPorVotos(): array`** — Propuestas con subconsulta de conteo de votos, ordenadas por votos DESC y fecha DESC.
+- **`obtenerPropuestasOrdenadasPorVotos(): array`** — Propuestas con subconsulta de conteo de votos y campo `estado` (COALESCE a 'en_estudio'), ordenadas por votos DESC y fecha DESC.
+- **`actualizarEstadoPropuesta(int $propuestaId, string $estado): bool`** — Actualiza el estado de una propuesta (valores: en_estudio, aceptada, descartada). Uso por staff/admin.
+- **`contarPropuestasEnEstudio(): int`** — Número de propuestas con estado en_estudio (para avisos del dashboard admin).
+- **`obtenerComentariosPorPropuesta(int $propuestaId): array`** — Comentarios de una propuesta con autor_nombre y es_mio (según usuario en sesión).
+- **`obtenerComentarioPorId(int $id): ?array`** — Un comentario por ID.
+- **`insertarComentario(int $propuestaId, int $usuarioId, string $texto): int`** — INSERT comentario; devuelve lastInsertId.
+- **`actualizarComentario(int $comentarioId, int $usuarioId, string $texto): bool`** — UPDATE del comentario solo si usuario_id coincide (solo el autor puede editar).
+- **`obtenerPedidosRecientesConProducto(int $usuarioId, int $limit = 10): array`** — Pedidos recientes del usuario con nombre del producto (producto_nombre).
+- **`obtenerPropuestasConParticipacionUsuario(int $usuarioId, int $limit = 10): array`** — Propuestas en las que el usuario participó (creó o votó); cada fila incluye id, titulo, estado, fecha_creacion, votos, participacion ('autor'|'voto').
+
+**Migración:** `asegurarColumnaEstadoPropuestas()` añade la columna `estado` a `propuestas_wishlist` si no existe (ALTER TABLE). La tabla `comentarios_propuesta` se crea en el esquema inicial si no existe.
 
 ---
 
@@ -294,11 +305,11 @@ Cada controlador se instancia desde **index.php** y se llama a **`ejecutar()`**.
 
 ### Wishlist.php
 
-- **`ejecutar(): void`** — Solo carga `html/wishlist.html` con ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, FOOTER. Las propuestas y votos se cargan y envían por JS (API `propuestas`, `votar`, `crear_propuesta`).
+- **`ejecutar(): void`** — Carga `html/wishlist.html` con ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, FOOTER y **PUEDE_STAFF** ('1' o '0') según si el usuario es staff o administrador. El body de la plantilla tiene `data-puede-staff="{{PUEDE_STAFF}}"` para que el JS muestre el control de cambio de estado. Las propuestas, votos y comentarios se cargan y envían por JS (API `propuestas`, `votar`, `crear_propuesta`, `comentarios_propuesta`, `añadir_comentario`, `editar_comentario`, `cambiar_estado_propuesta`).
 
 ### Admin.php
 
-- **`ejecutar(): void`** — Si el rol no es administrador ni staff, redirige a dashboard. Obtiene productos, categorías, pedidos, alertas; calcula totales y datos para gráficos (porCategoria, porEstado). Según si es administrador o no, construye el bloque de informes (botones a los informes HTML o mensaje “solo administrador”), `$bloqueGestionProductos` (formulario y lista o mensaje), `$bloqueGestionUsuarios` (enlace a admin_usuarios o vacío). Carga `html/admin.html` con TOTAL_PRODUCTOS, TOTAL_PEDIDOS, TOTAL_ALERTAS, DATOS_GRAFICOS, BLOQUE_*, FOOTER. Los gráficos se dibujan con Chart.js en admin.js; los productos se gestionan con admin-productos.js (API producto_crear, producto_actualizar, producto_eliminar).
+- **`ejecutar(): void`** — Si el rol no es administrador ni staff, redirige a dashboard. Obtiene productos, categorías, pedidos, alertas; calcula totales, datos para gráficos (porCategoria, porEstado), **pedidosPendientes** (pedidos pendiente/en_revision) y **propuestasEnEstudio** (`contarPropuestasEnEstudio()`). Construye **BLOQUE_AVISOS_DASHBOARD** (avisos: peticiones pendientes, propuestas en estudio, stock bajo). Según si es administrador o no, construye el bloque de informes (botones a los informes HTML o mensaje “solo administrador”), `$bloqueGestionProductos` (formulario y lista o mensaje), `$bloqueGestionUsuarios` (enlace a admin_usuarios o vacío). Carga `html/admin.html` con TOTAL_*, **BLOQUE_AVISOS_DASHBOARD**, DATOS_GRAFICOS, BLOQUE_ALERTAS_ADMIN, BLOQUE_INFORMES_PDF, etc. Los gráficos se dibujan con Chart.js en admin.js; los productos con admin-productos.js.
 
 ### GestionUsuarios.php
 
@@ -306,7 +317,7 @@ Cada controlador se instancia desde **index.php** y se llama a **`ejecutar()`**.
 
 ### MiCuenta.php
 
-- **`ejecutar(): void`** — Cualquier usuario logueado. Obtiene el usuario por ID desde BD (para el email), construye ENLACE_MI_CUENTA (activo), ENLACE_ADMIN y ENLACE_GESTION_USUARIOS según rol. Carga `html/mi_cuenta.html` con NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO y placeholders de cabecera. La edición del nombre y el cambio de contraseña se envían por mi-cuenta.js a la API (actualizar_perfil).
+- **`ejecutar(): void`** — Cualquier usuario logueado. Obtiene el usuario por ID desde BD (para el email), construye ENLACE_MI_CUENTA (activo), ENLACE_ADMIN y ENLACE_GESTION_USUARIOS según rol. Carga `html/mi_cuenta.html` con NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO y placeholders de cabecera. La edición del nombre y el cambio de contraseña se envían por mi-cuenta.js a la API (actualizar_perfil). La sección "Tu historial reciente" se rellena por mi-cuenta.js con GET `mi_historial`.
 
 ---
 
@@ -327,7 +338,9 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | categorias | devolverCategorias | { categorias: [...] } |
 | productos | devolverProductos | { productos: [...] } (solo productos activos por defecto; si el usuario es administrador y se llama con `&todos=1`, devuelve activos e inactivos). Cada producto incluye `stock_disponible`. |
 | alertas_stock | devolverAlertasStock | { alertas: [...] } (productos bajo umbral) |
-| propuestas | devolverPropuestas | { propuestas: [...] } (ordenadas por votos). Cada propuesta incluye ya_votado, autor_nombre y es_mia (true si el autor es el usuario en sesión). |
+| propuestas | devolverPropuestas | { propuestas: [...] } (ordenadas por votos). Cada propuesta incluye ya_votado, autor_nombre, es_mia y estado (en_estudio, aceptada, descartada). |
+| comentarios_propuesta | devolverComentariosPropuesta | GET con propuesta_id. { comentarios: [...] } con id, texto, autor_nombre, fecha_creacion, es_mio. |
+| mi_historial | devolverMiHistorial | { pedidos_recientes: [...], propuestas_recientes: [...] }. Pedidos con producto_nombre, estado, fecha_creacion; propuestas con titulo, estado, participacion ('autor'\|'voto'), fecha_creacion. Requiere sesión. |
 | pdf_inventario | generarPdfInventario | Informe HTML de inventario con cabecera corporativa (logo y línea azul), detalle por producto (incluyendo precio unitario simulado y valor total) y suma total del valor del inventario. Solo administrador; el navegador puede imprimir/guardar como PDF. |
 | pdf_pedidos | generarPdfPedidos | Informe HTML de pedidos con cabecera corporativa y, al final, tabla de **resumen mensual por departamento** (simulado) con importes calculados usando el precio unitario simulado. Solo administrador; el navegador puede imprimir/guardar como PDF. |
 | usuarios | devolverUsuarios | { usuarios: [...] } sin campo password (solo administrador; si no 403). |
@@ -349,6 +362,9 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | usuario_actualizar_activo | procesarUsuarioActualizarActivo | id, activo (0|1). No permite desactivar al usuario actual. | Solo administrador |
 | usuario_eliminar | procesarUsuarioEliminar | id. No permite eliminar al usuario actual. | Solo administrador |
 | actualizar_perfil | procesarActualizarPerfil | nombre (opcional), password_actual + password_nueva (opcional). Actualiza nombre y/o contraseña del usuario en sesión. | Cualquier usuario logueado |
+| añadir_comentario | procesarAñadirComentario | propuesta_id, texto | Cualquier usuario logueado |
+| editar_comentario | procesarEditarComentario | comentario_id, texto. Solo el autor del comentario puede editar. | Cualquier usuario logueado (autor) |
+| cambiar_estado_propuesta | procesarCambiarEstadoPropuesta | propuesta_id, estado (en_estudio\|aceptada\|descartada) | Staff o administrador |
 
 **Métodos privados adicionales:**
 
@@ -368,9 +384,9 @@ Cada plantilla usa placeholders `{{NOMBRE}}` que el controlador reemplaza con `c
 | **html/dashboard.html** | ASSET_*, NOMBRE_USUARIO, ROL_USUARIO, ENLACE_ADMIN, BLOQUE_ALERTAS, ENLACE_ADMIN_CARD, ALERTAS_CANTIDAD, PUEDE_ADMIN (data-* para JS), FOOTER |
 | **html/inventario.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, LISTA_CATEGORIAS, FOOTER |
 | **html/peticiones.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, BLOQUE_STAFF_PENDIENTES, BLOQUE_STAFF_REVISION, LISTA_MIS_PETICIONES, FOOTER |
-| **html/wishlist.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_MI_CUENTA, NOMBRE_USUARIO, ROL_USUARIO, FOOTER |
-| **html/mi_cuenta.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_GESTION_USUARIOS, ENLACE_MI_CUENTA, NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO, FOOTER |
-| **html/admin.html** | ASSET_*, ACCION_DASHBOARD, NOMBRE_USUARIO, ROL_USUARIO, TOTAL_PRODUCTOS, TOTAL_PEDIDOS, TOTAL_ALERTAS, DATOS_GRAFICOS, BLOQUE_INFORMES_PDF, BLOQUE_GESTION_PRODUCTOS, BLOQUE_GESTION_USUARIOS, FOOTER |
+| **html/wishlist.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_MI_CUENTA, NOMBRE_USUARIO, ROL_USUARIO, **PUEDE_STAFF** (data-puede-staff en body), FOOTER |
+| **html/mi_cuenta.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_GESTION_USUARIOS, ENLACE_MI_CUENTA, NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO, FOOTER. Incluye sección "Tu historial reciente" (id mi-cuenta-historial-contenido) rellenada por JS. |
+| **html/admin.html** | ASSET_*, ACCION_DASHBOARD, NOMBRE_USUARIO, ROL_USUARIO, TOTAL_*, DATOS_GRAFICOS, **BLOQUE_AVISOS_DASHBOARD**, BLOQUE_ALERTAS_ADMIN, BLOQUE_INFORMES_PDF, BLOQUE_GESTION_PRODUCTOS, BLOQUE_GESTION_USUARIOS, ENLACE_*, FOOTER |
 | **html/admin_usuarios.html** | ASSET_*, ACCION_DASHBOARD, NOMBRE_USUARIO, ROL_USUARIO, USUARIO_ID (data-usuario-id en body), FOOTER |
 | **html/componentes/footer.html** | ANIO |
 
@@ -388,11 +404,11 @@ Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, 
 | **dashboard.js** | Lee `data-alertas-cantidad` y `data-puede-admin` del body. Si hay alertas y puede admin y existe Swal, comprueba `sessionStorage` con clave `s6s_alerta_stock_visto`; si no se ha mostrado aún, muestra un SweetAlert de aviso usando el **isotipo** como icono (imagen) y guarda en sessionStorage que ya se mostró (una vez por sesión). |
 | **inventario.js** | Carga productos vía API (recurso productos). Filtra por categoría (botones con data-categoria) y por búsqueda por nombre. Dibuja tarjetas; botón “Solicitar” abre un modal con formulario (producto, unidades, prioridad, motivo). Envío con API crear_pedido. Si `stock <= umbral_critico`, la tarjeta añade la clase `tarjeta-stock-bajo`, muestra el texto “Stock bajo” y una **barra de progreso** (`.barra-stock-critico` + `.barra-stock-critico-inner`) que representa visualmente el porcentaje de stock respecto al umbral. |
 | **peticiones.js** | Carga/refresca datos si aplica; formulario “Nueva solicitud” (producto, unidades, prioridad, motivo) → API crear_pedido. Botones “Pasar a revisión”, “Aprobar”, “Denegar”, “Marcar entregado” envían API cambiar_estado_pedido con pedido_id y estado. Filtro de “Mis solicitudes” por estado. Confirmaciones con SweetAlert. |
-| **wishlist.js** | Pide API propuestas (`propuestas`), con `ya_votado` y `es_mia` por propuesta. Si no has votado: botón **“Votar”**; si has votado: texto **“Votado”** + botón **“Quitar voto”**. Al votar llama a `votar` y actualiza en caliente (votos + bloque “Votado”/“Quitar voto”). Al pulsar **“Quitar voto”** llama a `quitar_voto` y actualiza en caliente (resta 1 al contador y vuelve a mostrar “Votar”). Propuestas propias: etiqueta “Tu propuesta” (`.badge-mi-propuesta`) y clase `.item-propuesta-mia`. Formulario “Nueva propuesta” → API `crear_propuesta`. |
+| **wishlist.js** | Pide API `propuestas` (incluye `estado`). Renderiza **badge de estado** (En estudio, Aceptada, Descartada) por propuesta. Carga **comentarios** por propuesta (GET `comentarios_propuesta?propuesta_id=X`); muestra autor y, si `es_mio`, botón **Editar** (inline textarea + Guardar/Cancelar; POST `editar_comentario`). Formulario “Enviar comentario” → POST `añadir_comentario`. Si `data-puede-staff === '1'`, muestra desplegable estado + botón **Actualizar** → POST `cambiar_estado_propuesta`. Votar / Quitar voto y “Tu propuesta” como antes. |
 | **admin.js** | Lee `#datos-graficos` (JSON con categorias y estados). Inicializa dos gráficos Chart.js (productos por categoría, pedidos por estado). |
 | **admin-productos.js** | Lista productos vía API `productos&todos=1` (el admin ve también inactivos); botones Editar y Desactivar. Formulario para añadir/editar (nombre, descripción, categoría, stock, umbral, imagen); envío con API `producto_crear` o `producto_actualizar`. Desactivar con confirmación → API `producto_eliminar`. |
 | **admin-usuarios.js** | Lista usuarios vía API `usuarios`. Tabla con select de rol y de activo; al cambiar, POST a `usuario_actualizar_rol` o `usuario_actualizar_activo`. Botón Eliminar (excepto en la fila del usuario actual, usando data-usuario-id) con confirmación → API `usuario_eliminar`. |
-| **mi-cuenta.js** | "Guardar nombre" envía POST a `actualizar_perfil` con `{ nombre }`. Formulario cambiar contraseña valida nueva = repetición (mín. 6 caracteres) y envía POST con `{ password_actual, password_nueva }`. SweetAlert para éxito/error. |
+| **mi-cuenta.js** | "Guardar nombre" → POST `actualizar_perfil` con `{ nombre }`. Formulario cambiar contraseña → POST con `{ password_actual, password_nueva }`. Al cargar la página, GET **mi_historial** y pinta la sección **“Tu historial reciente”**: lista de pedidos recientes (enlace a Peticiones, producto_nombre, estado, fecha) y lista de propuestas recientes (enlace a Wishlist, título, estado, “Creaste esta propuesta”/“Votaste en esta propuesta”, fecha). SweetAlert para éxito/error. |
 
 ---
 
@@ -407,9 +423,9 @@ Los estilos están **divididos por objetivo** en varios archivos dentro de `css/
 - **footer.css**: pie de página.
 - **dashboard.css**: hero, cards de sección, alertas.
 - **inventario.css**: filtros, tarjetas producto, skeleton, modal solicitar.
-- **peticiones-wishlist.css**: listas peticiones/propuestas, badges prioridad, formularios nueva solicitud/propuesta.
-- **admin.css**: resumen, gráficos, gestión productos, upload, tabla productos.
-- **mi-cuenta.css**: página Mi cuenta.
+- **peticiones-wishlist.css**: listas peticiones/propuestas, badges prioridad, formularios nueva solicitud/propuesta; **badge estado propuesta** (`.badge-estado-en_estudio`, `.badge-estado-aceptada`, `.badge-estado-descartada`), bloque **comentarios** (`.propuesta-comentarios`, `.comentario-autor`, `.comentario-texto`, `.boton-editar-comentario`), control staff **cambiar estado** (`.propuesta-cambiar-estado`).
+- **admin.css**: **avisos** (`.admin-avisos`, `.admin-avisos-lista`, `.aviso-item`), resumen, gráficos, gestión productos, upload, tabla productos.
+- **mi-cuenta.css**: página Mi cuenta; **historial** (`.mi-cuenta-historial`, `.mi-cuenta-lista-historial`, `.mi-cuenta-item-historial`, `.mi-cuenta-badge-estado`).
 - **librerias-externas.css**: sobrescrituras para librerías de terceros (SweetAlert2, tema oscuro).
 - **otros.css**: ajustes puntuales (p. ej. `.pagina-login .pie-pagina`).
 
@@ -430,4 +446,5 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 | (fecha de hoy) | **Peticiones:** en `Peticiones.php` se construye mapa de nombres de usuarios y cada ítem muestra **solicitante** (nombre) en lugar de #id. Prioridad como badge con clases `badge-prioridad-alta|normal|baja`. CSS: `.peticion-solicitante`, `.badge-prioridad-*` (colores alta/normal/baja). Sin número de pedido en la vista; identificación por nombre del solicitante. |
 | (fecha de hoy) | **CSS reestructurado:** estilos divididos en `base.css`, `componentes.css`, `auth.css`, `cabecera-nav.css`, `footer.css`, `dashboard.css`, `inventario.css`, `peticiones-wishlist.css`, `admin.css`, `mi-cuenta.css`, `librerias-externas.css`, `otros.css`. Cada plantilla HTML enlaza los módulos que necesita. `estilos.css` pasa a ser un punto de entrada con `@import`. Documentación del CSS en `css/manual-css.md`. Ver sección 11. |
 | (fecha de hoy) | **CSS:** `css/README.md` renombrado a `css/manual-css.md`. `third-party.css` renombrado a `librerias-externas.css` (sobrescrituras para librerías de terceros). Actualizada sección 11 y árbol del proyecto. |
+| (fecha de hoy) | **Wishlist — comentarios y estado:** Tabla `comentarios_propuesta`; columna `estado` en `propuestas_wishlist` (en_estudio, aceptada, descartada). BD: `obtenerComentariosPorPropuesta`, `insertarComentario`, `actualizarComentario`, `obtenerComentarioPorId`, `actualizarEstadoPropuesta`, `contarPropuestasEnEstudio`, `obtenerPedidosRecientesConProducto`, `obtenerPropuestasConParticipacionUsuario`. API: GET `comentarios_propuesta`, POST `añadir_comentario`, `editar_comentario`, `cambiar_estado_propuesta`; GET `mi_historial`. Wishlist.php pasa PUEDE_STAFF; wishlist.js pinta estado, comentarios (autor, editar propios), formulario nuevo comentario y (si staff) cambio de estado. **Admin — avisos:** BLOQUE_AVISOS_DASHBOARD (peticiones pendientes, propuestas en estudio, stock bajo). **Mi cuenta — historial:** sección rellenada por mi-cuenta.js con GET mi_historial (pedidos_recientes, propuestas_recientes). CSS: peticiones-wishlist (badge estado, comentarios), admin (avisos), mi-cuenta (historial). |
 

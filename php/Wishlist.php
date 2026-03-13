@@ -28,6 +28,7 @@ class Wishlist
             'ENLACE_MI_CUENTA' => $enlaceMiCuenta,
             'NOMBRE_USUARIO' => htmlspecialchars($nombreUsuario),
             'ROL_USUARIO' => htmlspecialchars($rolUsuario),
+            'PUEDE_STAFF' => $puedeAdmin ? '1' : '0',
             'FOOTER' => $footer,
         ]);
         echo $html;

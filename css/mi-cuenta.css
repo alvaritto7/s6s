@@ -137,3 +137,59 @@
 .mi-cuenta-form-clave .mi-cuenta-etiqueta:first-of-type { margin-top: 0; }
 .mi-cuenta-form-clave .mi-cuenta-input { margin-bottom: 0; }
 .mi-cuenta-form-clave .mi-cuenta-acciones { margin-top: 1.5rem; }
+
+.mi-cuenta-historial { grid-column: 1 / -1; }
+
+.mi-cuenta-historial .mi-cuenta-ayuda { margin-bottom: 1rem; }
+
+.mi-cuenta-historial-contenido { min-height: 2rem; }
+
+.mi-cuenta-estado-carga { color: var(--gris-texto); font-size: 0.9rem; margin: 0; }
+
+.mi-cuenta-historial-subtitulo {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--blanco);
+    margin: 1rem 0 0.5rem 0;
+}
+
+.mi-cuenta-historial-subtitulo:first-child { margin-top: 0; }
+
+.mi-cuenta-lista-historial {
+    list-style: none;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
+}
+
+.mi-cuenta-item-historial {
+    font-size: 0.9rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mi-cuenta-item-historial:last-child { border-bottom: none; }
+
+.mi-cuenta-item-historial a {
+    color: var(--azul-electrico);
+    text-decoration: none;
+}
+
+.mi-cuenta-item-historial a:hover { text-decoration: underline; }
+
+.mi-cuenta-badge-estado {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    background: rgba(0, 163, 255, 0.15);
+    color: var(--azul-electrico);
+}
+
+.mi-cuenta-participacion { color: var(--gris-texto); font-size: 0.85rem; }
+
+.mi-cuenta-fecha { color: var(--gris-texto); font-size: 0.8rem; }
+
+.mi-cuenta-sin-datos { color: var(--gris-texto); font-size: 0.9rem; margin: 0.5rem 0 0 0; }

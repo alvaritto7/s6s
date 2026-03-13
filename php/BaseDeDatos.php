@@ -100,6 +100,7 @@ class BaseDeDatos
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `titulo` varchar(200) NOT NULL,
                 `descripcion` text,
+                `estado` varchar(30) NOT NULL DEFAULT 'en_estudio',
                 `usuario_id` int(11) unsigned NOT NULL,
                 `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
@@ -118,6 +119,20 @@ class BaseDeDatos
                 KEY `usuario_id` (`usuario_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `comentarios_propuesta` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `propuesta_id` int(11) unsigned NOT NULL,
+                `usuario_id` int(11) unsigned NOT NULL,
+                `texto` text NOT NULL,
+                `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `fecha_actualizacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `propuesta_id` (`propuesta_id`),
+                KEY `usuario_id` (`usuario_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->asegurarColumnaEstadoPropuestas();
 
         if ($this->queryOne('SELECT 1 FROM usuarios LIMIT 1') === null) {
             $this->pdo->exec("
@@ -206,6 +221,15 @@ class BaseDeDatos
                 (8, 1), (8, 4),
                 (9, 3), (9, 5), (9, 6)
             ");
+        }
+    }
+
+    /** Añade la columna estado a propuestas_wishlist si no existe (en_estudio, aceptada, descartada). */
+    private function asegurarColumnaEstadoPropuestas(): void
+    {
+        $columnas = $this->pdo->query("SHOW COLUMNS FROM propuestas_wishlist")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('estado', $columnas, true)) {
+            $this->pdo->exec("ALTER TABLE propuestas_wishlist ADD COLUMN estado VARCHAR(30) NOT NULL DEFAULT 'en_estudio' AFTER descripcion");
         }
     }
 
@@ -546,6 +570,22 @@ class BaseDeDatos
         );
     }
 
+    /** Pedidos recientes del usuario con nombre del producto. Limit por defecto 10. */
+    public function obtenerPedidosRecientesConProducto(int $usuarioId, int $limit = 10): array
+    {
+        $limit = max(1, min(50, $limit));
+        return $this->query(
+            'SELECT pe.id, pe.usuario_id, pe.producto_id, pe.unidades, pe.prioridad, pe.motivo, pe.estado, pe.fecha_creacion,
+                    pr.nombre AS producto_nombre
+             FROM pedidos pe
+             LEFT JOIN productos pr ON pr.id = pe.producto_id
+             WHERE pe.usuario_id = ?
+             ORDER BY pe.fecha_creacion DESC
+             LIMIT ' . $limit,
+            [$usuarioId]
+        );
+    }
+
     public function obtenerPedidosPorEstado(string $estado): array
     {
         return $this->query(
@@ -641,12 +681,12 @@ class BaseDeDatos
 
     public function obtenerPropuestas(): array
     {
-        return $this->query('SELECT id, titulo, descripcion, usuario_id, fecha_creacion FROM propuestas_wishlist ORDER BY id DESC');
+        return $this->query('SELECT id, titulo, descripcion, COALESCE(estado, \'en_estudio\') AS estado, usuario_id, fecha_creacion FROM propuestas_wishlist ORDER BY id DESC');
     }
 
     public function obtenerPropuestaPorId(int $id): ?array
     {
-        return $this->queryOne('SELECT id, titulo, descripcion, usuario_id, fecha_creacion FROM propuestas_wishlist WHERE id = ?', [$id]);
+        return $this->queryOne('SELECT id, titulo, descripcion, COALESCE(estado, \'en_estudio\') AS estado, usuario_id, fecha_creacion FROM propuestas_wishlist WHERE id = ?', [$id]);
     }
 
     public function insertarPropuesta(array $datosPropuesta): int
@@ -660,6 +700,23 @@ class BaseDeDatos
             ]
         );
         return (int) $this->pdo->lastInsertId();
+    }
+
+    /** Actualiza el estado de una propuesta (solo staff/admin). Valores: en_estudio, aceptada, descartada. */
+    public function actualizarEstadoPropuesta(int $propuestaId, string $estado): bool
+    {
+        $estado = preg_replace('/[^a-z_]/', '', $estado);
+        if (!in_array($estado, ['en_estudio', 'aceptada', 'descartada'], true)) {
+            return false;
+        }
+        return $this->executeUpdate('UPDATE propuestas_wishlist SET estado = ? WHERE id = ?', [$estado, $propuestaId]);
+    }
+
+    /** Número de propuestas en estado en_estudio (para avisos del dashboard admin). */
+    public function contarPropuestasEnEstudio(): int
+    {
+        $row = $this->queryOne("SELECT COUNT(*) AS total FROM propuestas_wishlist WHERE COALESCE(estado, 'en_estudio') = 'en_estudio'");
+        return (int) ($row['total'] ?? 0);
     }
 
     public function obtenerVotos(): array
@@ -699,7 +756,7 @@ class BaseDeDatos
     public function obtenerPropuestasOrdenadasPorVotos(): array
     {
         $propuestas = $this->query(
-            'SELECT p.id, p.titulo, p.descripcion, p.usuario_id, p.fecha_creacion,
+            'SELECT p.id, p.titulo, p.descripcion, COALESCE(p.estado, \'en_estudio\') AS estado, p.usuario_id, p.fecha_creacion,
                     (SELECT COUNT(*) FROM votos v WHERE v.propuesta_id = p.id) AS votos
              FROM propuestas_wishlist p
              ORDER BY votos DESC, p.fecha_creacion DESC'
@@ -709,5 +766,82 @@ class BaseDeDatos
         }
         unset($p);
         return $propuestas;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMENTARIOS EN PROPUESTAS
+    // -------------------------------------------------------------------------
+
+    public function obtenerComentariosPorPropuesta(int $propuestaId): array
+    {
+        $rows = $this->query(
+            'SELECT c.id, c.propuesta_id, c.usuario_id, c.texto, c.fecha_creacion, c.fecha_actualizacion,
+                    u.nombre AS autor_nombre
+             FROM comentarios_propuesta c
+             LEFT JOIN usuarios u ON u.id = c.usuario_id
+             WHERE c.propuesta_id = ?
+             ORDER BY c.fecha_creacion ASC',
+            [$propuestaId]
+        );
+        return $rows;
+    }
+
+    public function insertarComentario(int $propuestaId, int $usuarioId, string $texto): int
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return 0;
+        }
+        $this->execute(
+            'INSERT INTO comentarios_propuesta (propuesta_id, usuario_id, texto) VALUES (?, ?, ?)',
+            [$propuestaId, $usuarioId, $texto]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    /** Solo el autor puede editar. Devuelve true si se actualizó. */
+    public function actualizarComentario(int $comentarioId, int $usuarioId, string $texto): bool
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return false;
+        }
+        return $this->executeUpdate(
+            'UPDATE comentarios_propuesta SET texto = ?, fecha_actualizacion = NOW() WHERE id = ? AND usuario_id = ?',
+            [$texto, $comentarioId, $usuarioId]
+        );
+    }
+
+    public function obtenerComentarioPorId(int $id): ?array
+    {
+        return $this->queryOne(
+            'SELECT c.id, c.propuesta_id, c.usuario_id, c.texto, c.fecha_creacion, u.nombre AS autor_nombre
+             FROM comentarios_propuesta c
+             LEFT JOIN usuarios u ON u.id = c.usuario_id
+             WHERE c.id = ?',
+            [$id]
+        );
+    }
+
+    /**
+     * Propuestas en las que el usuario participó (creó o votó). Limit por defecto 10.
+     * Cada fila incluye id, titulo, estado, fecha_creacion, votos, participacion ('autor'|'voto').
+     */
+    public function obtenerPropuestasConParticipacionUsuario(int $usuarioId, int $limit = 10): array
+    {
+        $sql = "SELECT p.id, p.titulo, COALESCE(p.estado, 'en_estudio') AS estado, p.fecha_creacion,
+                (SELECT COUNT(*) FROM votos v WHERE v.propuesta_id = p.id) AS votos,
+                CASE WHEN p.usuario_id = ? THEN 'autor' ELSE 'voto' END AS participacion
+                FROM propuestas_wishlist p
+                WHERE p.usuario_id = ?
+                   OR EXISTS (SELECT 1 FROM votos v WHERE v.propuesta_id = p.id AND v.usuario_id = ?)
+                ORDER BY p.fecha_creacion DESC
+                LIMIT " . max(1, min(50, $limit));
+        $rows = $this->query($sql, [$usuarioId, $usuarioId, $usuarioId]);
+        foreach ($rows as &$r) {
+            $r['votos'] = (int) ($r['votos'] ?? 0);
+        }
+        unset($r);
+        return $rows;
     }
 }

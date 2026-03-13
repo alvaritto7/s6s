@@ -54,6 +54,13 @@
         }
     }
 
+    var puedeStaff = document.body && document.body.getAttribute('data-puede-staff') === '1';
+
+    function estadoPropuestaLabel(estado) {
+        var map = { en_estudio: 'En estudio', aceptada: 'Aceptada', descartada: 'Descartada' };
+        return map[estado] || 'En estudio';
+    }
+
     function renderizarPropuesta(propuesta, yaVotado) {
         var id = propuesta.id || '';
         var titulo = propuesta.titulo || propuesta.nombre || 'Sin título';
@@ -62,6 +69,8 @@
         var autor = propuesta.autor_nombre || '';
         var fecha = propuesta.fecha_creacion || '';
         var esMia = !!propuesta.es_mia;
+        var estado = (propuesta.estado || 'en_estudio').replace(/[^a-z_]/g, '');
+        if (estado !== 'en_estudio' && estado !== 'aceptada' && estado !== 'descartada') estado = 'en_estudio';
 
         var item = document.createElement('article');
         item.className = 'item-propuesta' + (esMia ? ' item-propuesta-mia' : '');
@@ -70,6 +79,7 @@
 
         var html = '';
         if (esMia) html += '<span class="badge-mi-propuesta">Tu propuesta</span>';
+        html += '<span class="badge-estado-propuesta badge-estado-' + escapeHtml(estado) + '">' + escapeHtml(estadoPropuestaLabel(estado)) + '</span>';
         html += '<h3 class="titulo-propuesta">' + escapeHtml(titulo) + '</h3>';
         if (descripcion) {
             html += '<p class="descripcion-propuesta">' + escapeHtml(descripcion) + '</p>';
@@ -87,6 +97,10 @@
         } else {
             html += '<div class="propuesta-acciones"><span class="boton boton-votado" aria-hidden="true">Votado</span><button type="button" class="boton boton-secundario boton-quitar-voto" data-propuesta-id="' + escapeHtml(String(id)) + '">Quitar voto</button></div>';
         }
+        if (puedeStaff) {
+            html += '<div class="propuesta-cambiar-estado"><label for="estado-' + id + '">Estado:</label><select id="estado-' + id + '" class="select-estado-propuesta" data-propuesta-id="' + escapeHtml(String(id)) + '"><option value="en_estudio"' + (estado === 'en_estudio' ? ' selected' : '') + '>En estudio</option><option value="aceptada"' + (estado === 'aceptada' ? ' selected' : '') + '>Aceptada</option><option value="descartada"' + (estado === 'descartada' ? ' selected' : '') + '>Descartada</option></select><button type="button" class="boton boton-secundario boton-aplicar-estado" data-propuesta-id="' + escapeHtml(String(id)) + '">Actualizar</button></div>';
+        }
+        html += '<div class="propuesta-comentarios" data-propuesta-id="' + escapeHtml(String(id)) + '"><h4>Comentarios</h4><ul class="comentarios-lista"></ul><form class="form-nuevo-comentario" data-propuesta-id="' + escapeHtml(String(id)) + '"><textarea name="texto" placeholder="Escribe un comentario..." maxlength="500"></textarea><button type="submit" class="boton boton-primario">Enviar comentario</button></form></div>';
         item.innerHTML = html;
         return item;
     }
@@ -134,6 +148,7 @@
                     });
                     enlazarBotonesVotar();
                     enlazarBotonesQuitarVoto();
+                    enlazarComentariosYEstado();
                 }
             })
             .catch(function () {
@@ -235,6 +250,158 @@
                     alert('No se pudo registrar el voto. Comprueba tu conexión.');
                 }
             });
+    }
+
+    function cargarComentariosPropuesta(propuestaId, callback) {
+        fetch(urlBase + '&recurso=comentarios_propuesta&propuesta_id=' + encodeURIComponent(propuestaId), { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(function (datos) { callback(null, datos.comentarios || []); })
+            .catch(function () { callback(true, []); });
+    }
+
+    function pintarComentarios(propuestaId, comentarios) {
+        var bloque = contenedor.querySelector('.propuesta-comentarios[data-propuesta-id="' + propuestaId + '"]');
+        if (!bloque) return;
+        var ul = bloque.querySelector('.comentarios-lista');
+        if (!ul) return;
+        ul.innerHTML = '';
+        (comentarios || []).forEach(function (c) {
+            var li = document.createElement('li');
+            li.className = 'comentario-item';
+            li.setAttribute('data-comentario-id', String(c.id || ''));
+            var autor = c.autor_nombre || 'Anónimo';
+            var fecha = c.fecha_creacion || '';
+            var texto = c.texto || '';
+            var esMio = !!c.es_mio;
+            li.innerHTML = '<span class="comentario-autor">' + escapeHtml(autor) + '</span>' +
+                (esMio ? '<button type="button" class="boton-editar-comentario" data-comentario-id="' + (c.id || '') + '" data-texto="' + escapeHtml(texto).replace(/"/g, '&quot;') + '">Editar</button>' : '') +
+                '<p class="comentario-texto">' + escapeHtml(texto) + '</p>' +
+                (fecha ? '<p class="comentario-fecha">' + escapeHtml(fecha) + '</p>' : '');
+            ul.appendChild(li);
+        });
+        bloque.querySelectorAll('.boton-editar-comentario').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.getAttribute('data-comentario-id');
+                var textoActual = (this.getAttribute('data-texto') || '').replace(/&quot;/g, '"');
+                var li = this.closest('.comentario-item');
+                if (!li) return;
+                var textoEl = li.querySelector('.comentario-texto');
+                if (!textoEl) return;
+                var area = document.createElement('textarea');
+                area.value = textoActual;
+                area.rows = 2;
+                area.className = 'comentario-edit-textarea';
+                area.style.width = '100%';
+                var guardar = document.createElement('button');
+                guardar.type = 'button';
+                guardar.className = 'boton boton-primario boton-guardar-comentario';
+                guardar.textContent = 'Guardar';
+                guardar.setAttribute('data-comentario-id', id);
+                var cancelar = document.createElement('button');
+                cancelar.type = 'button';
+                cancelar.className = 'boton boton-secundario';
+                cancelar.textContent = 'Cancelar';
+                textoEl.replaceWith(area);
+                this.replaceWith(guardar);
+                li.appendChild(cancelar);
+                cancelar.addEventListener('click', function () {
+                    var propId = li.closest('.propuesta-comentarios') && li.closest('.propuesta-comentarios').getAttribute('data-propuesta-id');
+                    if (propId) {
+                        cargarComentariosPropuesta(propId, function (err, list) {
+                            if (!err) pintarComentarios(propId, list);
+                        });
+                    }
+                });
+                guardar.addEventListener('click', function () {
+                    var nuevoTexto = area.value.trim();
+                    if (!nuevoTexto) return;
+                    fetch(urlBase + '&recurso=editar_comentario', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comentario_id: parseInt(id, 10), texto: nuevoTexto })
+                    })
+                        .then(function (r) { return r.json(); })
+                        .then(function (datos) {
+                            if (datos.actualizado) {
+                                cargarComentariosPropuesta(propuestaId, function (err, list) {
+                                    if (!err) pintarComentarios(propuestaId, list);
+                                });
+                            } else if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: datos.error || 'No se pudo editar.' }));
+                        })
+                        .catch(function () {
+                            if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: 'No se pudo conectar.' }));
+                        });
+                });
+            });
+        });
+    }
+
+    function enlazarComentariosYEstado() {
+        contenedor.querySelectorAll('.propuesta-comentarios').forEach(function (bloque) {
+            var propuestaId = bloque.getAttribute('data-propuesta-id');
+            if (!propuestaId) return;
+            cargarComentariosPropuesta(propuestaId, function (err, list) {
+                if (!err) pintarComentarios(propuestaId, list);
+            });
+        });
+        contenedor.querySelectorAll('.form-nuevo-comentario').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var propuestaId = form.getAttribute('data-propuesta-id');
+                var textarea = form.querySelector('textarea[name="texto"]');
+                var texto = textarea ? textarea.value.trim() : '';
+                if (!texto) return;
+                fetch(urlBase + '&recurso=añadir_comentario', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ propuesta_id: parseInt(propuestaId, 10), texto: texto })
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (datos) {
+                        if (datos.creado && datos.comentario) {
+                            textarea.value = '';
+                            cargarComentariosPropuesta(propuestaId, function (err, list) {
+                                if (!err) pintarComentarios(propuestaId, list);
+                            });
+                            if (window.Swal) window.Swal.fire(opcionesSwal({ title: 'Comentario añadido', text: '' }));
+                        } else if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: datos.error || 'No se pudo publicar.' }));
+                    })
+                    .catch(function () {
+                        if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: 'No se pudo conectar.' }));
+                    });
+            });
+        });
+        contenedor.querySelectorAll('.boton-aplicar-estado').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var propuestaId = this.getAttribute('data-propuesta-id');
+                var card = this.closest('.item-propuesta');
+                var select = card ? card.querySelector('.select-estado-propuesta') : null;
+                var estado = select ? select.value : 'en_estudio';
+                if (!propuestaId) return;
+                fetch(urlBase + '&recurso=cambiar_estado_propuesta', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ propuesta_id: parseInt(propuestaId, 10), estado: estado })
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (datos) {
+                        if (datos.actualizado && card) {
+                            var badge = card.querySelector('.badge-estado-propuesta');
+                            if (badge) {
+                                badge.className = 'badge-estado-propuesta badge-estado-' + estado;
+                                badge.textContent = estadoPropuestaLabel(estado);
+                            }
+                            if (window.Swal) window.Swal.fire(opcionesSwal({ title: 'Estado actualizado', text: '' }));
+                        } else if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: datos.error || 'No se pudo actualizar.' }));
+                    })
+                    .catch(function () {
+                        if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: 'No se pudo conectar.' }));
+                    });
+            });
+        });
     }
 
     var formNueva = document.getElementById('form-nueva-propuesta');

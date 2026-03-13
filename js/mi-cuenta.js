@@ -97,6 +97,69 @@
             });
     }
 
+    function escapeHtml(texto) {
+        if (!texto) return '';
+        var div = document.createElement('div');
+        div.textContent = texto;
+        return div.innerHTML;
+    }
+
+    function estadoPedidoLabel(estado) {
+        var map = { pendiente: 'Pendiente', en_revision: 'En revisión', aprobado: 'Aprobado', denegado: 'Denegado', entregado: 'Entregado' };
+        return map[estado] || estado || '—';
+    }
+
+    function estadoPropuestaLabel(estado) {
+        var map = { en_estudio: 'En estudio', aceptada: 'Aceptada', descartada: 'Descartada' };
+        return map[estado] || 'En estudio';
+    }
+
+    function cargarHistorial() {
+        var contenedor = document.getElementById('mi-cuenta-historial-contenido');
+        var estadoEl = document.getElementById('mi-cuenta-estado-historial');
+        if (!contenedor) return;
+
+        fetch(urlApi + 'mi_historial', { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(function (datos) {
+                var pedidos = datos.pedidos_recientes || [];
+                var propuestas = datos.propuestas_recientes || [];
+                var html = '';
+                if (pedidos.length > 0) {
+                    html += '<h3 class="mi-cuenta-historial-subtitulo">Peticiones recientes</h3><ul class="mi-cuenta-lista-historial">';
+                    pedidos.forEach(function (p) {
+                        var prod = p.producto_nombre || 'Producto';
+                        var est = p.estado || 'pendiente';
+                        var fecha = p.fecha_creacion || '';
+                        html += '<li class="mi-cuenta-item-historial"><a href="index.php?accion=peticiones">' + escapeHtml(prod) + '</a> <span class="mi-cuenta-badge-estado">' + escapeHtml(estadoPedidoLabel(est)) + '</span>' + (fecha ? ' <span class="mi-cuenta-fecha">' + escapeHtml(fecha) + '</span>' : '') + '</li>';
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<h3 class="mi-cuenta-historial-subtitulo">Peticiones recientes</h3><p class="mi-cuenta-sin-datos">No tienes peticiones recientes.</p>';
+                }
+                if (propuestas.length > 0) {
+                    html += '<h3 class="mi-cuenta-historial-subtitulo">Propuestas (wishlist)</h3><ul class="mi-cuenta-lista-historial">';
+                    propuestas.forEach(function (p) {
+                        var titulo = p.titulo || 'Propuesta';
+                        var est = p.estado || 'en_estudio';
+                        var part = p.participacion === 'autor' ? 'Creaste esta propuesta' : 'Votaste en esta propuesta';
+                        var fecha = p.fecha_creacion || '';
+                        html += '<li class="mi-cuenta-item-historial"><a href="index.php?accion=wishlist">' + escapeHtml(titulo) + '</a> <span class="mi-cuenta-badge-estado">' + escapeHtml(estadoPropuestaLabel(est)) + '</span> <span class="mi-cuenta-participacion">' + escapeHtml(part) + '</span>' + (fecha ? ' <span class="mi-cuenta-fecha">' + escapeHtml(fecha) + '</span>' : '') + '</li>';
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<h3 class="mi-cuenta-historial-subtitulo">Propuestas (wishlist)</h3><p class="mi-cuenta-sin-datos">No has participado en ninguna propuesta reciente.</p>';
+                }
+                if (estadoEl) estadoEl.remove();
+                contenedor.innerHTML = html;
+            })
+            .catch(function () {
+                if (estadoEl) estadoEl.textContent = 'No se pudo cargar el historial.';
+            });
+    }
+
     if (btnGuardarNombre) btnGuardarNombre.addEventListener('click', guardarNombre);
     if (formClave) formClave.addEventListener('submit', cambiarClave);
+
+    cargarHistorial();
 })();

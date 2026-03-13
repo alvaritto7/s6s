@@ -2,6 +2,49 @@
  * admin.css — Administración: resumen, gráficos, gestión de productos, upload, tabla.
  */
 
+.admin-avisos {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: rgba(0, 163, 255, 0.06);
+    border: 1px solid rgba(0, 163, 255, 0.2);
+    border-radius: 10px;
+}
+
+.admin-avisos h2 {
+    font-size: 1rem;
+    margin: 0 0 0.75rem 0;
+    color: var(--blanco);
+}
+
+.admin-avisos-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.aviso-item {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.aviso-item:last-child { margin-bottom: 0; }
+
+.aviso-item a {
+    color: var(--azul-electrico);
+    text-decoration: none;
+}
+
+.aviso-item a:hover { text-decoration: underline; }
+
+.aviso-item.aviso-alerta { color: #e8a855; }
+
+.aviso-icono { margin-right: 0.35rem; }
+
+.admin-avisos-vacio {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
 .admin-resumen { margin-bottom: 2rem; }
 
 .resumen-cards {

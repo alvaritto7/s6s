@@ -94,6 +94,21 @@ class Api
             case 'actualizar_perfil':
                 $this->procesarActualizarPerfil();
                 break;
+            case 'comentarios_propuesta':
+                $this->devolverComentariosPropuesta();
+                break;
+            case 'añadir_comentario':
+                $this->procesarAñadirComentario();
+                break;
+            case 'editar_comentario':
+                $this->procesarEditarComentario();
+                break;
+            case 'cambiar_estado_propuesta':
+                $this->procesarCambiarEstadoPropuesta();
+                break;
+            case 'mi_historial':
+                $this->devolverMiHistorial();
+                break;
             default:
                 $this->responderJson(['error' => 'Recurso no válido', 'recurso' => $recurso], 400);
         }
@@ -372,6 +387,89 @@ class Api
         }
         $ok = $this->bd->eliminarVoto($propuestaId, $usuarioId);
         $this->responderJson(['voto_quitado' => $ok, 'mensaje' => $ok ? 'Voto retirado' : 'No tenías voto en esta propuesta']);
+    }
+
+    /** Comentarios de una propuesta (GET). Incluye autor_nombre. */
+    private function devolverComentariosPropuesta(): void
+    {
+        $propuestaId = (int) ($_GET['propuesta_id'] ?? 0);
+        if ($propuestaId < 1) {
+            $this->responderJson(['error' => 'propuesta_id requerido', 'comentarios' => []], 400);
+            return;
+        }
+        $comentarios = $this->bd->obtenerComentariosPorPropuesta($propuestaId);
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        foreach ($comentarios as &$c) {
+            $c['es_mio'] = ((int)($c['usuario_id'] ?? 0) === $usuarioId);
+        }
+        unset($c);
+        $this->responderJson(['comentarios' => $comentarios]);
+    }
+
+    /** Añadir comentario a una propuesta (POST). */
+    private function procesarAñadirComentario(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson(['error' => 'Método no permitido'], 405);
+            return;
+        }
+        $input = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        $propuestaId = (int) ($input['propuesta_id'] ?? 0);
+        $texto = trim((string) ($input['texto'] ?? ''));
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($propuestaId < 1 || $usuarioId < 1 || $texto === '') {
+            $this->responderJson(['error' => 'Datos insuficientes', 'creado' => false], 400);
+            return;
+        }
+        $id = $this->bd->insertarComentario($propuestaId, $usuarioId, $texto);
+        if ($id < 1) {
+            $this->responderJson(['error' => 'No se pudo guardar', 'creado' => false], 400);
+            return;
+        }
+        $comentario = $this->bd->obtenerComentarioPorId($id);
+        $comentario['es_mio'] = true;
+        $this->responderJson(['creado' => true, 'comentario' => $comentario]);
+    }
+
+    /** Editar comentario propio (POST). Solo el autor puede editar. */
+    private function procesarEditarComentario(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson(['error' => 'Método no permitido'], 405);
+            return;
+        }
+        $input = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        $comentarioId = (int) ($input['comentario_id'] ?? 0);
+        $texto = trim((string) ($input['texto'] ?? ''));
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($comentarioId < 1 || $usuarioId < 1 || $texto === '') {
+            $this->responderJson(['error' => 'Datos insuficientes', 'actualizado' => false], 400);
+            return;
+        }
+        $ok = $this->bd->actualizarComentario($comentarioId, $usuarioId, $texto);
+        $this->responderJson(['actualizado' => $ok, 'mensaje' => $ok ? 'Comentario actualizado' : 'No puedes editar este comentario']);
+    }
+
+    /** Cambiar estado de una propuesta (POST). Solo staff/admin. Valores: en_estudio, aceptada, descartada. */
+    private function procesarCambiarEstadoPropuesta(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson(['error' => 'Método no permitido'], 405);
+            return;
+        }
+        if (!$this->esStaffOAdmin()) {
+            $this->responderJson(['error' => 'Sin permiso', 'codigo' => 403], 403);
+            return;
+        }
+        $input = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        $propuestaId = (int) ($input['propuesta_id'] ?? 0);
+        $estado = trim((string) ($input['estado'] ?? ''));
+        if ($propuestaId < 1 || $estado === '') {
+            $this->responderJson(['error' => 'Datos inválidos', 'actualizado' => false], 400);
+            return;
+        }
+        $ok = $this->bd->actualizarEstadoPropuesta($propuestaId, $estado);
+        $this->responderJson(['actualizado' => $ok, 'mensaje' => $ok ? 'Estado actualizado' : 'Error']);
     }
 
     /** Crea una solicitud (pedido). Comprueba stock disponible y bloquea. */
@@ -773,5 +871,21 @@ class Api
             $_SESSION['usuario_nombre'] = $actualizaciones['nombre'];
         }
         $this->responderJson(['ok' => true, 'mensaje' => 'Perfil actualizado correctamente']);
+    }
+
+    /** Historial del usuario: últimas peticiones y actividad en wishlist (propuestas creadas o votadas). */
+    private function devolverMiHistorial(): void
+    {
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($usuarioId < 1) {
+            $this->responderJson(['error' => 'No autorizado'], 401);
+            return;
+        }
+        $pedidos = $this->bd->obtenerPedidosRecientesConProducto($usuarioId, 10);
+        $propuestas = $this->bd->obtenerPropuestasConParticipacionUsuario($usuarioId, 10);
+        $this->responderJson([
+            'pedidos_recientes' => $pedidos,
+            'propuestas_recientes' => $propuestas,
+        ]);
     }
 }

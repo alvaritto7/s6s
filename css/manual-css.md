@@ -11,9 +11,9 @@ Estilos del proyecto organizados por **objetivo**. El orden de carga debe respet
 | **footer.css** | Pie de página (`.pie-pagina`, columnas, copy) |
 | **dashboard.css** | Página principal: hero, cards de sección, alertas, nav-secciones |
 | **inventario.css** | Filtros, tarjetas producto, skeleton, modal solicitar |
-| **peticiones-wishlist.css** | Listas peticiones/propuestas, badges prioridad, formularios, filtro estado |
-| **admin.css** | Resumen, gráficos, gestión productos, upload, tabla productos |
-| **mi-cuenta.css** | Página Mi cuenta (hero, grid, secciones) |
+| **peticiones-wishlist.css** | Listas peticiones/propuestas, badges prioridad, formularios, filtro estado; **badge estado propuesta** (en_estudio, aceptada, descartada), **comentarios** en propuesta (lista, autor, editar), control staff cambiar estado |
+| **admin.css** | **Avisos** (Qué requiere tu atención), resumen, gráficos, gestión productos, upload, tabla productos |
+| **mi-cuenta.css** | Página Mi cuenta (hero, grid, secciones); **historial reciente** (listas pedidos y propuestas, badges estado) |
 | **librerias-externas.css** | Sobrescrituras para librerías de terceros (p. ej. SweetAlert2, tema oscuro) |
 | **otros.css** | Ajustes puntuales (p. ej. `.pagina-login .pie-pagina`) |
 

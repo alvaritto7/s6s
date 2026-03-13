@@ -27,6 +27,8 @@ class Admin
         $totalProductos = count(array_filter($productos, fn($p) => ($p['activo'] ?? true) !== false));
         $totalPedidos = count($pedidos);
         $totalAlertas = count($alertasStock);
+        $pedidosPendientes = count(array_filter($pedidos, fn($p) => in_array($p['estado'] ?? '', ['pendiente', 'en_revision'], true)));
+        $propuestasEnEstudio = $bd->contarPropuestasEnEstudio();
 
         $porCategoria = [];
         foreach ($categorias as $cat) {
@@ -75,6 +77,20 @@ class Admin
         $enlaceGestionUsuarios = $esAdministrador ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
         $enlaceMiCuenta = '<li><a href="index.php?accion=mi_cuenta">Mi cuenta</a></li>';
 
+        $avisos = [];
+        if ($pedidosPendientes > 0) {
+            $avisos[] = '<li class="aviso-item"><a href="index.php?accion=peticiones">' . $pedidosPendientes . ' petición' . ($pedidosPendientes !== 1 ? 'es' : '') . ' pendiente' . ($pedidosPendientes !== 1 ? 's' : '') . ' de revisión</a></li>';
+        }
+        if ($propuestasEnEstudio > 0) {
+            $avisos[] = '<li class="aviso-item"><a href="index.php?accion=wishlist">' . $propuestasEnEstudio . ' propuesta' . ($propuestasEnEstudio !== 1 ? 's' : '') . ' en estudio</a></li>';
+        }
+        if ($totalAlertas > 0) {
+            $avisos[] = '<li class="aviso-item aviso-alerta"><span class="aviso-icono" aria-hidden="true">⚠</span> ' . $totalAlertas . ' producto' . ($totalAlertas !== 1 ? 's' : '') . ' con stock bajo umbral (ver abajo)</li>';
+        }
+        $bloqueAvisosDashboard = empty($avisos)
+            ? '<p class="color-gris admin-avisos-vacio">Nada pendiente de tu atención.</p>'
+            : '<ul class="admin-avisos-lista">' . implode('', $avisos) . '</ul>';
+
         $html = cargarPlantilla('html/admin.html', [
             'ASSET_ISOTIPO' => ASSET_ISOTIPO,
             'ASSET_FAVICON' => ASSET_FAVICON,
@@ -85,6 +101,7 @@ class Admin
             'TOTAL_PEDIDOS' => (string) $totalPedidos,
             'TOTAL_ALERTAS' => (string) $totalAlertas,
             'DATOS_GRAFICOS' => $datosGraficos,
+            'BLOQUE_AVISOS_DASHBOARD' => $bloqueAvisosDashboard,
             'BLOQUE_ALERTAS_ADMIN' => $bloqueAlertasAdmin,
             'BLOQUE_INFORMES_PDF' => $bloqueInformesPdf,
             'BLOQUE_GESTION_PRODUCTOS' => $bloqueGestionProductos,

@@ -56,13 +56,13 @@ En s6s hay **tres roles**. Lo que puedes hacer depende de con cuál entres.
 | Rol | Quién suele ser | Qué puede hacer |
 |-----|-----------------|------------------|
 | **Empleado** | Cualquier usuario que se registre desde “Registro” | Ver **Inventario**, **Peticiones** y **Wishlist**. Pedir material, ver sus solicitudes, crear propuestas en la wishlist y votar. **No** ve el menú ni la página de **Administración**. |
-| **Staff** | Persona de almacén o revisión | Todo lo del empleado, **más**: entrar en **Administración** (solo ver resumen y gráficos), y en **Peticiones** puede **cambiar el estado** de las solicitudes (aprobar, denegar, marcar entregado, etc.). **No** puede ver ni generar los informes de inventario/pedidos ni añadir/editar/desactivar productos del catálogo. |
+| **Staff** | Persona de almacén o revisión | Todo lo del empleado, **más**: entrar en **Administración** (ver resumen, gráficos y avisos), en **Peticiones** puede **cambiar el estado** de las solicitudes (aprobar, denegar, marcar entregado, etc.) y en **Wishlist** puede **cambiar el estado** de las propuestas (En estudio, Aceptada, Descartada). **No** puede ver ni generar los informes de inventario/pedidos ni añadir/editar/desactivar productos del catálogo. |
 | **Administrador** | Responsable total del sistema | Todo lo del staff, **más**: en **Administración** puede **ver y generar informes** de inventario y pedidos (en HTML imprimible), **gestionar el catálogo de productos** (añadir, editar y desactivar productos) y acceder a **Gestión de usuarios** (cambiar rol, activar/desactivar y eliminar usuarios). |
 
 Resumen rápido:
 
 - **Empleado:** usar la app (inventario, peticiones, wishlist). Sin acceso a Administración.
-- **Staff:** usar la app + revisar y cambiar estados de pedidos + ver resumen y gráficos en Administración. Sin informes ni gestión de productos.
+- **Staff:** usar la app + revisar y cambiar estados de pedidos + cambiar estado de propuestas en Wishlist + ver resumen, gráficos y avisos en Administración. Sin informes ni gestión de productos.
 - **Administrador:** todo lo anterior + ver/generar informes, gestionar productos (altas, ediciones, desactivar) y gestión de usuarios (cambiar rol, activar/desactivar, eliminar).
 
 ---
@@ -199,7 +199,7 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 
 ## 9. Wishlist
 
-**Qué es:** Un **tablón de propuestas** de compra (“me gustaría que compraran esto”). Puedes **crear** propuestas y **votar** las de otros. Las propuestas se ordenan por número de votos.
+**Qué es:** Un **tablón de propuestas** de compra (“me gustaría que compraran esto”). Puedes **crear** propuestas, **votar** las de otros, **comentar** en cualquier propuesta y ver en **qué estado** está cada una (En estudio, Aceptada, Descartada). Las propuestas se ordenan por número de votos.
 
 **Quién puede usarlo:** Empleado, staff y administrador (todos).
 
@@ -207,16 +207,21 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 
 - **Título** y texto explicando que son propuestas de compra y que puedes votar.
 - **“Nueva propuesta”:** formulario con **Título** (obligatorio), **Descripción** (opcional) y botón **“Crear propuesta”**.
-- **Lista de propuestas:** cada una muestra título, descripción (si tiene), quién la propuso, fecha, **número de votos** y, según tu caso:
-  - Un botón **“Votar”** si todavía no has votado esa propuesta.
-  - El texto **“Votado”** y un botón **“Quitar voto”** si ya has votado (así puedes retirar tu voto si cambias de opinión).
-  - Si la propuesta es **tuya**, verás la etiqueta **“Tu propuesta”** en azul sobre la tarjeta para identificarla rápido.
+- **Lista de propuestas:** cada una muestra:
+  - **Estado:** una etiqueta que indica si la propuesta está **En estudio**, **Aceptada** o **Descartada** (así sabes si ya se ha decidido y evitas duplicar solicitudes).
+  - Título, descripción (si tiene), quién la propuso, fecha y **número de votos**.
+  - Según tu caso: botón **“Votar”** si no has votado, o **“Votado”** y **“Quitar voto”** si ya has votado.
+  - Si la propuesta es **tuya**, la etiqueta **“Tu propuesta”** en azul.
+  - **Comentarios:** debajo de cada propuesta hay un bloque **“Comentarios”** con la lista de comentarios (nombre de quien lo escribió, texto y fecha). Si el comentario es **tuyo**, verás un botón **“Editar”** para modificarlo. Un formulario **“Escribe un comentario…”** con botón **“Enviar comentario”** para añadir uno nuevo.
+  - Si eres **staff o administrador**, además verás un desplegable **“Estado”** (En estudio / Aceptada / Descartada) y un botón **“Actualizar”** para cambiar el estado de la propuesta.
 
 **Qué puedes hacer:**
 
 1. **Crear propuesta:** Rellenar al menos el título, opcionalmente la descripción, y pulsar **“Crear propuesta”**. Verás un mensaje de confirmación.
-2. **Votar:** Pulsar **“Votar”** en una propuesta. Sin recargar la página, el número de votos sube y aparece **“Votado”** junto al botón **“Quitar voto”**.
-3. **Quitar voto:** Si ya has votado, puedes pulsar **“Quitar voto”** para retirar tu voto. El contador baja en uno y vuelve a mostrarse el botón **“Votar”** por si quieres volver a votar más tarde.
+2. **Votar / Quitar voto:** Pulsar **“Votar”** o **“Quitar voto”**; el contador y los botones se actualizan sin recargar la página.
+3. **Comentar:** Escribir en el cuadro de comentarios y pulsar **“Enviar comentario”**. Verás tu comentario con tu nombre.
+4. **Editar tu comentario:** En un comentario que hayas escrito tú, pulsar **“Editar”**, cambiar el texto y **“Guardar”** (o **“Cancelar”** para no guardar).
+5. **Cambiar estado (solo staff/administrador):** Elegir el nuevo estado en el desplegable y pulsar **“Actualizar”**. La etiqueta de estado de la propuesta se actualiza al momento.
 
 Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si falla la conexión, aparecerá un aviso de error.
 
@@ -229,6 +234,14 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 **Quién puede entrar:** Solo **staff** y **administrador**. El empleado no ve el enlace “Administración” ni puede abrir esta página.
 
 **Qué ves según tu rol:**
+
+### Si eres Administrador o Staff
+
+- **Qué requiere tu atención:** al inicio de la página, un bloque con avisos que te informan de lo pendiente:
+  - Enlace a **X petición(es) pendiente(s) de revisión** (solicitudes en estado pendiente o en revisión).
+  - Enlace a **X propuesta(s) en estudio** (propuestas de la wishlist que aún están “En estudio”).
+  - Aviso de **X producto(s) con stock bajo umbral** (con referencia al panel de alertas más abajo).
+  - Si no hay nada pendiente, el texto **“Nada pendiente de tu atención”**.
 
 ### Si eres Administrador
 
@@ -295,11 +308,13 @@ Si intentas desactivarte a ti mismo o eliminarte desde la API, verás un mensaje
 
 - **Datos de la cuenta:** tu **nombre** (editable en un cuadro de texto), tu **email** (solo lectura) y tu **rol** (solo lectura). Un botón **“Guardar nombre”** para guardar los cambios de nombre.
 - **Cambiar contraseña:** tres campos: **Contraseña actual**, **Nueva contraseña** y **Repetir nueva contraseña**. La nueva debe tener al menos 6 caracteres. Botón **“Cambiar contraseña”** para aplicar el cambio.
+- **Tu historial reciente:** una sección que muestra tus **últimas peticiones** (producto solicitado, estado —Pendiente, En revisión, Aprobado, etc.— y fecha; enlace a Peticiones) y tus **últimas propuestas** en las que has participado (título, estado —En estudio, Aceptada, Descartada—, si “Creaste esta propuesta” o “Votaste en esta propuesta”, y fecha; enlace a Wishlist). Así puedes ver de un vistazo tu actividad reciente.
 
 **Qué puedes hacer:**
 
 1. **Cambiar tu nombre:** Escribe el nuevo nombre en el cuadro y pulsa **“Guardar nombre”**. Verás un mensaje de confirmación y el nombre se actualizará en la cabecera en la próxima carga (o de inmediato si la página se refresca).
 2. **Cambiar tu contraseña:** Rellena la contraseña actual y la nueva (y su repetición). Si la contraseña actual no es correcta o las dos nuevas no coinciden, la aplicación te avisará. Si todo es correcto, verás un mensaje de éxito y ya podrás iniciar sesión con la nueva contraseña.
+3. **Consultar tu historial:** La sección “Tu historial reciente” se carga sola al entrar en Mi cuenta; los enlaces te llevan a Peticiones o Wishlist para ver el detalle.
 
 ---
 
@@ -352,4 +367,5 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 | (fecha de hoy) | **Mi cuenta:** nueva página accesible desde el menú para todos los usuarios. Permite ver nombre, email y rol; editar el nombre (Guardar nombre) y cambiar la contraseña (contraseña actual + nueva + repetición). Wishlist: las propuestas creadas por el usuario actual muestran la etiqueta **"Tu propuesta"** en azul para identificarlas. |
 | (fecha de hoy) | **Wishlist:** añadida la opción **"Quitar voto"**. Si ya has votado una propuesta, aparece el botón "Quitar voto" junto a "Votado"; al pulsarlo se retira tu voto (el contador baja y vuelve a mostrarse "Votar") sin recargar la página. |
 | (fecha de hoy) | **Peticiones:** en todas las listas se muestra **quién hace la petición** (nombre del solicitante; en "Mis solicitudes" aparece "Tú"). La **prioridad** se ve con badges de color: Alta (rojo), Normal (azul), Baja (verde). Eliminado el número de pedido (#1, #2…) de la vista; cada línea se identifica por el nombre del solicitante. |
+| (fecha de hoy) | **Wishlist:** cada propuesta muestra su **estado** (En estudio, Aceptada, Descartada). **Comentarios** en cada propuesta: se ve el nombre del autor; si el comentario es tuyo puedes **editar** el texto (botón Editar). Staff y administrador pueden **cambiar el estado** de la propuesta (desplegable + Actualizar). **Administración:** nueva sección **“Qué requiere tu atención”** al inicio con avisos (peticiones pendientes de revisión, propuestas en estudio, productos con stock bajo). **Mi cuenta:** nueva sección **“Tu historial reciente”** con peticiones recientes (producto, estado, fecha) y propuestas en las que has participado (título, estado, “Creaste”/“Votaste”, fecha); enlaces a Peticiones y Wishlist. |
 
