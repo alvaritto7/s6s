@@ -12,9 +12,18 @@
     var usuarioActualId = parseInt(document.body.getAttribute('data-usuario-id') || '0', 10);
 
     function opcionesSwal(parametros) {
-        var opciones = { icon: parametros.icon || 'success', title: parametros.title || '', text: parametros.text || '' };
+        var opciones = { title: parametros.title || '', text: parametros.text || '' };
+        var icon = parametros.icon || '';
+        if (icon === 'error' || icon === 'warning') {
+            opciones.icon = icon;
+        }
         var isotipo = document.body.getAttribute('data-isotipo');
-        if (isotipo) opciones.imageUrl = isotipo;
+        if (isotipo) {
+            opciones.imageUrl = isotipo;
+            opciones.imageHeight = 60;
+            opciones.imageWidth = 60;
+        }
+        opciones.confirmButtonColor = '#00A3FF';
         return opciones;
     }
 

@@ -206,6 +206,7 @@ Al final del archivo se hace `require_once` de **php/Plantillas.php**, para que 
 - **`actualizarProducto(int $id, array $datosActualizados): bool`** — UPDATE de campos permitidos: nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo.
 - **`eliminarProducto(int $id): bool`** — En realidad pone `activo = 0` (soft delete).
 - **`obtenerProductosBajoUmbral(): array`** — Productos con `activo=1`, `umbral_critico > 0` y `stock <= umbral_critico`.
+- **`obtenerPrecioUnitarioSimulado(int $productoId): float`** — Devuelve un **precio unitario simulado** (no está en la BD) según una tabla en PHP. Se usa en los informes PDF para calcular el valor económico del inventario y el consumo por pedidos. Si el producto no está en la tabla, devuelve un precio por defecto.
 
 **Métodos públicos — Pedidos:**
 
@@ -301,11 +302,11 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | recurso | Método que lo atiende | Respuesta |
 |---------|------------------------|-----------|
 | categorias | devolverCategorias | { categorias: [...] } |
-| productos | devolverProductos | { productos: [...], categorias: [...] } (productos activos) |
+| productos | devolverProductos | { productos: [...] } (solo productos activos por defecto; si el usuario es administrador y se llama con `&todos=1`, devuelve activos e inactivos). Cada producto incluye `stock_disponible`. |
 | alertas_stock | devolverAlertasStock | { alertas: [...] } (productos bajo umbral) |
 | propuestas | devolverPropuestas | { propuestas: [...], votosPorPropuesta: {...}, usuarioYaVoto: {...} } (propuestas ordenadas por votos, conteos y si el usuario ya votó cada una) |
-| pdf_inventario | generarPdfInventario | PDF (solo administrador; si no 403). Usa DomPDF. |
-| pdf_pedidos | generarPdfPedidos | PDF (solo administrador; si no 403). |
+| pdf_inventario | generarPdfInventario | Informe HTML de inventario con cabecera corporativa (logo y línea azul), detalle por producto (incluyendo precio unitario simulado y valor total) y suma total del valor del inventario. Solo administrador; el navegador puede imprimir/guardar como PDF. |
+| pdf_pedidos | generarPdfPedidos | Informe HTML de pedidos con cabecera corporativa y, al final, tabla de **resumen mensual por departamento** (simulado) con importes calculados usando el precio unitario simulado. Solo administrador; el navegador puede imprimir/guardar como PDF. |
 | usuarios | devolverUsuarios | { usuarios: [...] } sin campo password (solo administrador; si no 403). |
 
 **Recursos POST (acción):**
@@ -323,7 +324,10 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | usuario_actualizar_activo | procesarUsuarioActualizarActivo | id, activo (0|1). No permite desactivar al usuario actual. | Solo administrador |
 | usuario_eliminar | procesarUsuarioEliminar | id. No permite eliminar al usuario actual. | Solo administrador |
 
-**Método privado adicional:** `subirImagenProducto(string $nombreCampo): string` — Procesa el archivo subido en `$_FILES[$nombreCampo]`, redimensiona con GD si está disponible y guarda en `imagenes/productos/`; devuelve la ruta relativa o cadena vacía.
+**Métodos privados adicionales:**
+
+- `subirImagenProducto(string $nombreCampo): string` — Procesa el archivo subido en `$_FILES[$nombreCampo]`, redimensiona con GD si está disponible y guarda en `imagenes/productos/`; devuelve la ruta relativa o cadena vacía.
+- `resolverDepartamentoSimulado(array $usuario): string` — A partir del email y rol de un usuario devuelve un “departamento” simulado (Dirección, Almacén / Logística, IT, Finanzas, General) que se usa en el PDF de pedidos para agrupar el consumo mensual por departamento.
 
 ---
 
@@ -354,13 +358,13 @@ Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, 
 | **nav.js** | Obtiene `#btn-menu-mobile` y `#nav-principal`. Al hacer clic en el botón, toggle de la clase `nav-abierto` en el nav y cambia el texto del botón (Menú / Cerrar) y el atributo `aria-expanded`. |
 | **login.js** | (Si existe) Lógica del formulario de login (validación cliente, etc.). |
 | **registro.js** | (Si existe) Lógica del formulario de registro. |
-| **dashboard.js** | Lee `data-alertas-cantidad` y `data-puede-admin` del body. Si hay alertas y puede admin y existe Swal, comprueba `sessionStorage` con clave `s6s_alerta_stock_visto`; si no se ha mostrado aún, muestra un SweetAlert de aviso y guarda en sessionStorage que ya se mostró (una vez por sesión). |
-| **inventario.js** | Carga productos vía API (recurso productos). Filtra por categoría (botones con data-categoria) y por búsqueda por nombre. Dibuja tarjetas; botón “Solicitar” abre un modal con formulario (producto, unidades, prioridad, motivo). Envío con API crear_pedido. |
+| **dashboard.js** | Lee `data-alertas-cantidad` y `data-puede-admin` del body. Si hay alertas y puede admin y existe Swal, comprueba `sessionStorage` con clave `s6s_alerta_stock_visto`; si no se ha mostrado aún, muestra un SweetAlert de aviso usando el **isotipo** como icono (imagen) y guarda en sessionStorage que ya se mostró (una vez por sesión). |
+| **inventario.js** | Carga productos vía API (recurso productos). Filtra por categoría (botones con data-categoria) y por búsqueda por nombre. Dibuja tarjetas; botón “Solicitar” abre un modal con formulario (producto, unidades, prioridad, motivo). Envío con API crear_pedido. Si `stock <= umbral_critico`, la tarjeta añade la clase `tarjeta-stock-bajo`, muestra el texto “Stock bajo” y una **barra de progreso** (`.barra-stock-critico` + `.barra-stock-critico-inner`) que representa visualmente el porcentaje de stock respecto al umbral. |
 | **peticiones.js** | Carga/refresca datos si aplica; formulario “Nueva solicitud” (producto, unidades, prioridad, motivo) → API crear_pedido. Botones “Pasar a revisión”, “Aprobar”, “Denegar”, “Marcar entregado” envían API cambiar_estado_pedido con pedido_id y estado. Filtro de “Mis solicitudes” por estado. Confirmaciones con SweetAlert. |
-| **wishlist.js** | Pide API propuestas; muestra lista con votos y botón Votar (o “Ya has votado”). Envío de voto con API votar. Formulario “Nueva propuesta” (título, descripción) → API crear_propuesta. |
+| **wishlist.js** | Pide API propuestas (`propuestas`), que ya incluye un campo booleano `ya_votado` por propuesta. Muestra lista con votos, autor y fecha; si `ya_votado` es false muestra botón **“Votar”**, si es true muestra botón **“Votado”** desactivado (`.boton-votado`). Al votar (`votar()`), llama al recurso `votar` y, si tiene éxito, **actualiza en caliente** el número de votos (`.votos-numero`) y convierte el botón en “Votado” deshabilitado, sin recargar la lista entera. Formulario “Nueva propuesta” (título, descripción) → API `crear_propuesta`. |
 | **admin.js** | Lee `#datos-graficos` (JSON con categorias y estados). Inicializa dos gráficos Chart.js (productos por categoría, pedidos por estado). |
-| **admin-productos.js** | Lista productos vía API productos; botones Editar y Desactivar. Formulario para añadir/editar (nombre, descripción, categoría, stock, umbral, imagen); envío con API producto_crear o producto_actualizar. Desactivar con confirmación → API producto_eliminar. |
-| **admin-usuarios.js** | Lista usuarios vía API usuarios. Tabla con select de rol y de activo; al cambiar, POST a usuario_actualizar_rol o usuario_actualizar_activo. Botón Eliminar (excepto en la fila del usuario actual, usando data-usuario-id) con confirmación → API usuario_eliminar. |
+| **admin-productos.js** | Lista productos vía API `productos&todos=1` (el admin ve también inactivos); botones Editar y Desactivar. Formulario para añadir/editar (nombre, descripción, categoría, stock, umbral, imagen); envío con API `producto_crear` o `producto_actualizar`. Desactivar con confirmación → API `producto_eliminar`. |
+| **admin-usuarios.js** | Lista usuarios vía API `usuarios`. Tabla con select de rol y de activo; al cambiar, POST a `usuario_actualizar_rol` o `usuario_actualizar_activo`. Botón Eliminar (excepto en la fila del usuario actual, usando data-usuario-id) con confirmación → API `usuario_eliminar`. |
 
 ---
 
@@ -377,4 +381,5 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 | Fecha       | Cambio |
 |------------|--------|
 | (fecha de hoy) | Creación del manual técnico. Documentados: estructura del proyecto, index.php, configuracion.php, Plantillas.php, BaseDeDatos (esquema y métodos), controladores Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Admin, GestionUsuarios, Api (todos los recursos), plantillas HTML, JS y CSS. Diferenciación clara con MANUAL_USO.md. |
+| (fecha de hoy) | Añadidos: `BaseDeDatos::obtenerPrecioUnitarioSimulado()` para tener un precio_unitario simulado sin cambiar el esquema de BD; API `devolverProductos` con soporte `todos=1` para que el admin vea también productos inactivos; `Api::resolverDepartamentoSimulado()` y lógica de **resumen de consumo mensual por departamento** en `generarPdfPedidos()`. Actualizados los PDFs de inventario y pedidos con cabeceras corporativas (logo completo arriba derecha y línea azul) y valor económico. Documentadas las barras de stock crítico en `inventario.js`/CSS y la actualización en caliente del botón de votos en `wishlist.js`. |
 

@@ -66,9 +66,18 @@
         }
         html += '<p class="tarjeta-stock">Stock: <strong>' + stock + '</strong> · Disponible: <strong>' + disponible + '</strong>';
         if (esBajo) {
-            html += ' <span class="tarjeta-alerta">(bajo umbral)</span>';
+            html += ' <span class="tarjeta-alerta">Stock bajo</span>';
         }
         html += '</p>';
+        if (esBajo) {
+            var porcentaje = 0;
+            if (umbral > 0) {
+                porcentaje = Math.round((stock / umbral) * 100);
+                if (porcentaje < 0) porcentaje = 0;
+                if (porcentaje > 100) porcentaje = 100;
+            }
+            html += '<div class="barra-stock-critico" aria-hidden="true"><div class="barra-stock-critico-inner" style="width:' + porcentaje + '%;"></div></div>';
+        }
         if (disponible > 0) {
             html += '<div class="tarjeta-acciones"><button type="button" class="boton boton-primario boton-solicitar" data-id="' + escapeHtml(String(id)) + '" data-nombre="' + escapeHtml(nombre) + '" data-disponible="' + disponible + '">Solicitar</button></div>';
         }
@@ -200,8 +209,18 @@
     }
 
     function opcionesSwal(parametros) {
-        var opciones = { icon: parametros.icon || 'success', title: parametros.title || '', text: parametros.text || '' };
-        if (getIsotipoUrl()) opciones.imageUrl = getIsotipoUrl();
+        var opciones = { title: parametros.title || '', text: parametros.text || '' };
+        var icon = parametros.icon || '';
+        if (icon === 'error' || icon === 'warning') {
+            opciones.icon = icon;
+        }
+        var iso = getIsotipoUrl();
+        if (iso) {
+            opciones.imageUrl = iso;
+            opciones.imageHeight = 60;
+            opciones.imageWidth = 60;
+        }
+        opciones.confirmButtonColor = '#00A3FF';
         return opciones;
     }
 

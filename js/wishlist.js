@@ -17,8 +17,19 @@
     }
 
     function opcionesSwal(parametros) {
-        var opciones = { icon: parametros.icon || 'success', title: parametros.title || '', text: parametros.text || '' };
-        if (getIsotipoUrl()) opciones.imageUrl = getIsotipoUrl();
+        var opciones = { title: parametros.title || '', text: parametros.text || '' };
+        var icon = parametros.icon || '';
+        // Para errores/avisos mantenemos el icono; para éxitos usamos solo el isotipo
+        if (icon === 'error' || icon === 'warning') {
+            opciones.icon = icon;
+        }
+        var iso = getIsotipoUrl();
+        if (iso) {
+            opciones.imageUrl = iso;
+            opciones.imageHeight = 60;
+            opciones.imageWidth = 60;
+        }
+        opciones.confirmButtonColor = '#00A3FF';
         return opciones;
     }
 
@@ -69,11 +80,11 @@
             if (fecha) html += escapeHtml(fecha);
             html += '</p>';
         }
-        html += '<p class="votos">' + votos + ' voto' + (votos !== 1 ? 's' : '') + '</p>';
+        html += '<p class="votos"><span class="votos-numero">' + votos + '</span> voto' + (votos !== 1 ? 's' : '') + '</p>';
         if (!yaVotado) {
             html += '<button type="button" class="boton boton-primario boton-votar" data-propuesta-id="' + escapeHtml(String(id)) + '">Votar</button>';
         } else {
-            html += '<span class="ya-votado">Ya has votado</span>';
+            html += '<button type="button" class="boton boton-votado" disabled>Votado</button>';
         }
         item.innerHTML = html;
         return item;
@@ -137,12 +148,12 @@
             btn.addEventListener('click', function () {
                 var id = this.getAttribute('data-propuesta-id');
                 if (!id) return;
-                votar(parseInt(id, 10));
+                votar(parseInt(id, 10), this);
             });
         });
     }
 
-    function votar(propuestaId) {
+    function votar(propuestaId, boton) {
         fetch(urlBase + '&recurso=votar', {
             method: 'POST',
             credentials: 'same-origin',
@@ -154,7 +165,18 @@
             })
             .then(function (datos) {
                 if (datos.voto) {
-                    cargarPropuestas();
+                    // Actualizar tarjeta en caliente: votos + estado del botón
+                    var card = boton && boton.closest ? boton.closest('.item-propuesta') : null;
+                    if (card) {
+                        var votosEl = card.querySelector('.votos-numero');
+                        var actual = votosEl ? parseInt(votosEl.textContent || '0', 10) : 0;
+                        if (votosEl) votosEl.textContent = String(actual + 1);
+                        boton.textContent = 'Votado';
+                        boton.classList.remove('boton-primario');
+                        boton.classList.add('boton-votado');
+                        boton.disabled = true;
+                        boton.removeAttribute('data-propuesta-id');
+                    }
                 } else {
                     if (typeof window.Swal !== 'undefined') {
                         window.Swal.fire(opcionesSwal({ icon: 'info', title: 'Wishlist', text: datos.mensaje || 'No se pudo registrar el voto.' }));

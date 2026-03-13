@@ -11,8 +11,18 @@
     }
 
     function opcionesSwal(parametros) {
-        var opciones = { icon: parametros.icon || 'success', title: parametros.title || '', text: parametros.text || '' };
-        if (getIsotipoUrl()) opciones.imageUrl = getIsotipoUrl();
+        var opciones = { title: parametros.title || '', text: parametros.text || '' };
+        var icon = parametros.icon || '';
+        if (icon === 'error' || icon === 'warning') {
+            opciones.icon = icon;
+        }
+        var iso = getIsotipoUrl();
+        if (iso) {
+            opciones.imageUrl = iso;
+            opciones.imageHeight = 60;
+            opciones.imageWidth = 60;
+        }
+        opciones.confirmButtonColor = '#00A3FF';
         return opciones;
     }
 

@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
-  <!-- Isotipo hexagonal s6s: fondo antracita, "6" en azul eléctrico -->
-  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#1A1A1B" stroke="#00A3FF" stroke-width="2"/>
-  <text x="32" y="38" text-anchor="middle" font-size="24" font-weight="bold" fill="#00A3FF" font-family="system-ui, sans-serif">6</text>
-</svg>

@@ -496,6 +496,39 @@ class BaseDeDatos
         return $this->normalizarActivo($rows);
     }
 
+    /**
+     * Precio unitario simulado para informes. No se guarda en BD; se calcula en PHP.
+     * Permite que los PDF de inventario/pedidos muestren valor económico.
+     */
+    public function obtenerPrecioUnitarioSimulado(int $productoId): float
+    {
+        // Mapa básico de precios para algunos productos conocidos
+        $precios = [
+            1 => 950.00,  // Portátil Dell
+            2 => 180.00,  // Monitor LG 24"
+            3 => 35.00,   // Teclado inalámbrico
+            4 => 25.00,   // Ratón inalámbrico
+            5 => 60.00,   // Webcam HD
+            6 => 80.00,   // Disco duro externo
+            7 => 220.00,  // Silla ergonómica
+            8 => 150.00,  // Escritorio
+            9 => 120.00,  // Armario archivador
+            10 => 45.00,  // Lámpara escritorio
+            11 => 90.00,  // Estantería
+            12 => 4.50,   // Papel A4
+            13 => 3.00,   // Bolígrafos
+            14 => 75.00,  // Toner impresora
+            15 => 2.50,   // Carpeta archivador
+            16 => 5.00,   // Bloc Pos-it
+            17 => 12.00,  // Grapadora metálica
+        ];
+        if (isset($precios[$productoId])) {
+            return $precios[$productoId];
+        }
+        // Precio por defecto para productos nuevos: evita romper cálculos
+        return 50.00;
+    }
+
     // -------------------------------------------------------------------------
     // PEDIDOS / SOLICITUDES
     // -------------------------------------------------------------------------

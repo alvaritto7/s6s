@@ -39,9 +39,11 @@ define('ACCION_ADMIN', 'admin');
 define('ACCION_ADMIN_USUARIOS', 'admin_usuarios');
 define('ACCION_API', 'api');
 
-// Identidad visual: logotipo e isotipo en PNG transparente para integración en fondo oscuro
+// Identidad visual: logotipo e isotipo
 define('ASSET_LOGOTIPO', 'imagenes/logotipo_transparente.png');
+define('ASSET_LOGOTIPO_OPACO', 'imagenes/logotipo_s6s.png');
 define('ASSET_ISOTIPO', 'imagenes/isotipo_transparente.png');
-define('ASSET_FAVICON', 'imagenes/isotipo_transparente.png');
+// Favicon de pestaña: siempre favicon.png
+define('ASSET_FAVICON', 'imagenes/favicon.png');
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'Plantillas.php';

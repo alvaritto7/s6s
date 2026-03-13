@@ -675,11 +675,12 @@ body {
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .tarjeta-producto:hover {
     border-color: var(--azul-electrico);
+    transform: translateY(-1px);
 }
 
 .tarjeta-imagen {
@@ -730,13 +731,38 @@ body {
     color: var(--blanco);
 }
 
-.tarjeta-stock-bajo .tarjeta-stock .tarjeta-alerta {
-    color: var(--azul-electrico);
-}
-
 .tarjeta-alerta {
     font-size: 0.85rem;
     color: var(--azul-electrico);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Producto con stock crítico: borde y distintivo sutil */
+.tarjeta-stock-bajo {
+    border-color: rgba(255, 163, 0, 0.7);
+    box-shadow: 0 0 0 1px rgba(255, 163, 0, 0.35);
+}
+
+.tarjeta-stock-bajo .tarjeta-alerta {
+    color: #ffb347;
+}
+
+/* Barra de progreso de stock crítico dentro de la tarjeta */
+.barra-stock-critico {
+    margin-top: 0.4rem;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+.barra-stock-critico-inner {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #ff4e50 0%, #ffb347 100%);
+    transition: width 0.25s ease-out;
 }
 
 .tarjeta-acciones {

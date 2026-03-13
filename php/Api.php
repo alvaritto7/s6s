@@ -102,7 +102,8 @@ class Api
     }
 
     /**
-     * Genera PDF del inventario con DomPDF (logotipo s6s en cabecera). Solo administrador.
+     * Genera informe de inventario en HTML con aspecto de PDF corporativo. Solo administrador.
+     * No depende de DomPDF: el navegador puede imprimir o guardar como PDF.
      */
     private function generarPdfInventario(): void
     {
@@ -110,20 +111,14 @@ class Api
             $this->responderJson(['error' => 'Solo el administrador puede exportar informes', 'codigo' => 403], 403);
             return;
         }
-        if (!class_exists(\Dompdf\Dompdf::class)) {
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['error' => 'DomPDF no instalado. Ejecuta: composer require dompdf/dompdf'], JSON_UNESCAPED_UNICODE);
-            return;
-        }
         $bd = new BaseDeDatos();
         $productos = $bd->obtenerProductos();
         $categorias = $bd->obtenerCategorias();
-        $rutaLogo = RUTA_RAIZ . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR . 'logotipo_transparente.png';
-        $logoBase64 = '';
-        if (is_file($rutaLogo)) {
-            $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogo));
-        }
+        // En informes usamos un logotipo existente del proyecto.
+        // Si en el futuro añades una versión específica para fondo blanco, aquí podemos cambiar la ruta.
+        $logoUrl = ASSET_LOGOTIPO_OPACO;
         $filas = '';
+        $totalInventario = 0.0;
         foreach ($productos as $p) {
             $nombreCat = '';
             foreach ($categorias as $c) {
@@ -132,34 +127,42 @@ class Api
                     break;
                 }
             }
-            $filas .= '<tr><td>' . (int)($p['id'] ?? 0) . '</td><td>' . htmlspecialchars($p['nombre'] ?? '') . '</td><td>' . htmlspecialchars($nombreCat) . '</td><td>' . (int)($p['stock'] ?? 0) . '</td></tr>';
+            $idProd = (int)($p['id'] ?? 0);
+            $stock = (int)($p['stock'] ?? 0);
+            $precio = $bd->obtenerPrecioUnitarioSimulado($idProd);
+            $valor = $stock * $precio;
+            $totalInventario += $valor;
+            $filas .= '<tr><td>' . $idProd . '</td><td>' . htmlspecialchars($p['nombre'] ?? '') . '</td><td>' . htmlspecialchars($nombreCat) . '</td><td style="text-align:right;">' . $stock . '</td><td style="text-align:right;">' . number_format($precio, 2, ',', '.') . ' €</td><td style="text-align:right;">' . number_format($valor, 2, ',', '.') . ' €</td></tr>';
         }
-        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Inventario s6s</title></head><body style="font-family: sans-serif;">';
-        if ($logoBase64) {
-            $html .= '<p><img src="' . $logoBase64 . '" alt="s6s" style="max-height: 40px;" /></p>';
-        }
-        $html .= '<h1>Inventario s6s</h1><p>Generado el ' . date('d/m/Y H:i') . '</p><table border="1" cellpadding="6"><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock</th></tr></thead><tbody>' . $filas . '</tbody></table></body></html>';
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="inventario-s6s.pdf"');
-        echo $dompdf->output();
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Inventario s6s</title>'
+            . '<link rel="icon" type="image/png" href="' . htmlspecialchars(ASSET_FAVICON, ENT_QUOTES, 'UTF-8') . '">'
+            . '<style>
+            body{font-family:sans-serif;font-size:12px;color:#222;}
+            .header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00A3FF;padding-bottom:8px;margin-bottom:16px;}
+            .header-logo img{max-height:40px;}
+            .header-title h1{margin:0;font-size:18px;}
+            .header-title p{margin:2px 0 0;font-size:11px;color:#555;}
+            table{border-collapse:collapse;width:100%;margin-top:8px;}
+            th,td{border:1px solid #ccc;padding:6px 8px;}
+            th{background:#f5f7fa;}
+            .resumen{margin-top:14px;font-weight:bold;}
+        </style></head><body>';
+        $html .= '<div class="header"><div class="header-title"><h1>Inventario s6s</h1><p>Generado el ' . date('d/m/Y H:i') . '</p></div><div class="header-logo"><img src="' . htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') . '" alt="s6s"></div></div>';
+        $html .= '<table><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Precio unitario</th><th>Valor total</th></tr></thead><tbody>' . $filas . '</tbody></table>';
+        $html .= '<p class="resumen">Valor económico total del inventario: ' . number_format($totalInventario, 2, ',', '.') . ' €</p>';
+        $html .= '</body></html>';
+        header('Content-Type: text/html; charset=utf-8');
+        echo $html;
     }
 
     /**
-     * Genera PDF con listado de pedidos (logotipo en cabecera). Solo administrador.
+     * Genera informe de pedidos en HTML con aspecto de informe corporativo. Solo administrador.
+     * No depende de DomPDF: el navegador puede imprimir o guardar como PDF.
      */
     private function generarPdfPedidos(): void
     {
         if (!$this->esAdministrador()) {
             $this->responderJson(['error' => 'Solo el administrador puede exportar informes', 'codigo' => 403], 403);
-            return;
-        }
-        if (!class_exists(\Dompdf\Dompdf::class)) {
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['error' => 'DomPDF no instalado'], JSON_UNESCAPED_UNICODE);
             return;
         }
         $bd = new BaseDeDatos();
@@ -168,30 +171,99 @@ class Api
         $usuarios = $bd->obtenerUsuarios();
         $nombresProd = [];
         $nombresUser = [];
+        $usuariosPorId = [];
         foreach ($productos as $p) {
             $nombresProd[(int)($p['id'] ?? 0)] = $p['nombre'] ?? '';
         }
         foreach ($usuarios as $u) {
-            $nombresUser[(int)($u['id'] ?? 0)] = $u['nombre'] ?? $u['email'] ?? '';
+            $uid = (int)($u['id'] ?? 0);
+            $usuariosPorId[$uid] = $u;
+            $nombresUser[$uid] = $u['nombre'] ?? $u['email'] ?? '';
         }
-        $rutaLogo = RUTA_RAIZ . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR . 'logotipo_transparente.png';
-        $logoBase64 = is_file($rutaLogo) ? 'data:image/png;base64,' . base64_encode(file_get_contents($rutaLogo)) : '';
+        // En informes usamos un logotipo existente del proyecto (igual que en login/registro).
+        $logoUrl = ASSET_LOGOTIPO_OPACO;
         $filas = '';
+        $consumoMensual = [];
         foreach ($pedidos as $p) {
-            $filas .= '<tr><td>' . (int)($p['id'] ?? 0) . '</td><td>' . htmlspecialchars($nombresUser[(int)($p['usuario_id'] ?? 0)] ?? '') . '</td><td>' . htmlspecialchars($nombresProd[(int)($p['producto_id'] ?? 0)] ?? '') . '</td><td>' . (int)($p['unidades'] ?? 0) . '</td><td>' . htmlspecialchars($p['estado'] ?? '') . '</td><td>' . htmlspecialchars($p['fecha_creacion'] ?? '') . '</td></tr>';
+            $idPedido = (int)($p['id'] ?? 0);
+            $usuarioId = (int)($p['usuario_id'] ?? 0);
+            $productoId = (int)($p['producto_id'] ?? 0);
+            $unidades = (int)($p['unidades'] ?? 0);
+            $estado = $p['estado'] ?? '';
+            $fecha = $p['fecha_creacion'] ?? '';
+            $filas .= '<tr><td>' . $idPedido . '</td><td>' . htmlspecialchars($nombresUser[$usuarioId] ?? '') . '</td><td>' . htmlspecialchars($nombresProd[$productoId] ?? '') . '</td><td style="text-align:right;">' . $unidades . '</td><td>' . htmlspecialchars($estado) . '</td><td>' . htmlspecialchars($fecha) . '</td></tr>';
+
+            // Resumen de consumo mensual por departamento (simulado)
+            if ($fecha !== '' && $unidades > 0) {
+                $mes = substr((string)$fecha, 0, 7); // YYYY-MM
+                $usuario = $usuariosPorId[$usuarioId] ?? [];
+                $departamento = $this->resolverDepartamentoSimulado($usuario);
+                $precio = $bd->obtenerPrecioUnitarioSimulado($productoId);
+                $valor = $precio * $unidades;
+                if (!isset($consumoMensual[$mes])) {
+                    $consumoMensual[$mes] = [];
+                }
+                if (!isset($consumoMensual[$mes][$departamento])) {
+                    $consumoMensual[$mes][$departamento] = 0.0;
+                }
+                $consumoMensual[$mes][$departamento] += $valor;
+            }
         }
-        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pedidos s6s</title></head><body style="font-family: sans-serif;">';
-        if ($logoBase64) {
-            $html .= '<p><img src="' . $logoBase64 . '" alt="s6s" style="max-height: 40px;" /></p>';
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pedidos s6s</title>'
+            . '<link rel="icon" type="image/png" href="' . htmlspecialchars(ASSET_FAVICON, ENT_QUOTES, 'UTF-8') . '">'
+            . '<style>
+            body{font-family:sans-serif;font-size:12px;color:#222;}
+            .header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00A3FF;padding-bottom:8px;margin-bottom:16px;}
+            .header-logo img{max-height:40px;}
+            .header-title h1{margin:0;font-size:18px;}
+            .header-title p{margin:2px 0 0;font-size:11px;color:#555;}
+            table{border-collapse:collapse;width:100%;margin-top:8px;}
+            th,td{border:1px solid #ccc;padding:6px 8px;}
+            th{background:#f5f7fa;}
+            .resumen-titulo{margin-top:18px;font-size:14px;font-weight:bold;}
+        </style></head><body>';
+        $html .= '<div class="header"><div class="header-title"><h1>Pedidos s6s</h1><p>Generado el ' . date('d/m/Y H:i') . '</p></div><div class="header-logo"><img src="' . htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') . '" alt="s6s"></div></div>';
+        $html .= '<table><thead><tr><th>ID</th><th>Solicitante</th><th>Producto</th><th>Unidades</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>' . $filas . '</tbody></table>';
+
+        // Bloque de resumen de consumo mensual por departamento
+        if (!empty($consumoMensual)) {
+            $html .= '<p class="resumen-titulo">Resumen de consumo mensual por departamento</p>';
+            $html .= '<table><thead><tr><th>Mes</th><th>Departamento</th><th>Importe total</th></tr></thead><tbody>';
+            ksort($consumoMensual);
+            foreach ($consumoMensual as $mes => $departamentos) {
+                ksort($departamentos);
+                foreach ($departamentos as $dep => $importe) {
+                    $html .= '<tr><td>' . htmlspecialchars($mes) . '</td><td>' . htmlspecialchars($dep) . '</td><td style="text-align:right;">' . number_format($importe, 2, ',', '.') . ' €</td></tr>';
+                }
+            }
+            $html .= '</tbody></table>';
         }
-        $html .= '<h1>Pedidos s6s</h1><p>Generado el ' . date('d/m/Y H:i') . '</p><table border="1" cellpadding="6"><thead><tr><th>ID</th><th>Solicitante</th><th>Producto</th><th>Unidades</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>' . $filas . '</tbody></table></body></html>';
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="pedidos-s6s.pdf"');
-        echo $dompdf->output();
+
+        $html .= '</body></html>';
+        header('Content-Type: text/html; charset=utf-8');
+        echo $html;
+    }
+
+    /**
+     * Departamento simulado a partir de datos de usuario (para informes).
+     */
+    private function resolverDepartamentoSimulado(array $usuario): string
+    {
+        $email = (string)($usuario['email'] ?? '');
+        $rol = (string)($usuario['rol'] ?? '');
+        if ($rol === ROL_ADMINISTRADOR) {
+            return 'Dirección';
+        }
+        if ($rol === ROL_STAFF) {
+            return 'Almacén / Logística';
+        }
+        if (stripos($email, 'it') !== false) {
+            return 'IT';
+        }
+        if (stripos($email, 'fin') !== false || stripos($email, 'conta') !== false) {
+            return 'Finanzas';
+        }
+        return 'General';
     }
 
     private function responderJson(array $datos, int $codigo = 200): void

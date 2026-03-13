@@ -146,7 +146,7 @@ Si falta algo o el email ya está usado, verás un **mensaje en rojo**. Si todo 
 - **Título:** “Inventario” y un texto que dice que puedes filtrar por categoría.
 - **Buscar por nombre:** Un cuadro de búsqueda para escribir y filtrar productos por nombre.
 - **Categoría:** Botones para filtrar: **Todas**, **IT**, **Mobiliario**, **Consumibles** (las categorías pueden variar).
-- **Lista de productos:** Tarjetas con cada producto: nombre, descripción, stock disponible y un botón **“Solicitar”** (si hay stock). Si el stock está bajo umbral, puede verse un aviso en la tarjeta.
+- **Lista de productos:** Tarjetas con cada producto: nombre, descripción, stock disponible y un botón **“Solicitar”** (si hay stock). Si el stock está por debajo del **umbral crítico**, la tarjeta se resalta visualmente (borde anaranjado, texto “Stock bajo” y una **barra de color rojo/naranja** que indica de forma visual lo cerca que está de agotarse).
 
 **Qué puedes hacer:**
 
@@ -204,12 +204,14 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 
 - **Título** y texto explicando que son propuestas de compra y que puedes votar.
 - **“Nueva propuesta”:** formulario con **Título** (obligatorio), **Descripción** (opcional) y botón **“Crear propuesta”**.
-- **Lista de propuestas:** cada una muestra título, descripción (si tiene), quién la propuso, fecha, **número de votos** y un botón **“Votar”** (o el texto “Ya has votado” si ya votaste esa propuesta).
+- **Lista de propuestas:** cada una muestra título, descripción (si tiene), quién la propuso, fecha, **número de votos** y, según tu caso:
+  - Un botón **“Votar”** si todavía no has votado esa propuesta.
+  - Un botón desactivado **“Votado”** si ya la has votado (así ves claramente que ya has participado en esa propuesta).
 
 **Qué puedes hacer:**
 
 1. **Crear propuesta:** Rellenar al menos el título, opcionalmente la descripción, y pulsar **“Crear propuesta”**. Verás un mensaje de confirmación.
-2. **Votar:** Pulsar **“Votar”** en una propuesta. Solo se puede votar una vez por propuesta; después verás “Ya has votado”.
+2. **Votar:** Pulsar **“Votar”** en una propuesta. En cuanto votas, **sin recargar la página**, el número de votos sube en pantalla y el botón cambia a **“Votado”** en color destacado y queda desactivado para que veas que ya no puedes votar otra vez.
 
 Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si falla la conexión, aparecerá un aviso de error.
 
@@ -217,7 +219,7 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 
 ## 10. Administración
 
-**Qué es:** Panel para ver **resumen**, **gráficos** y (solo administrador) **exportar PDFs** y **gestionar el catálogo de productos**.
+**Qué es:** Panel para ver **resumen**, **gráficos** y (solo administrador) **consultar informes imprimibles** y **gestionar el catálogo de productos**.
 
 **Quién puede entrar:** Solo **staff** y **administrador**. El empleado no ve el enlace “Administración” ni puede abrir esta página.
 
@@ -227,7 +229,7 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 
 - **Resumen:** tres tarjetas con números: **Productos activos**, **Total pedidos**, **Stock bajo umbral**.
 - **Estadísticas:** dos gráficos (productos por categoría y pedidos por estado).
-- **Informes:** texto explicativo y dos botones: **“Inventario (PDF)”** y **“Pedidos (PDF)”** para descargar informes en PDF.
+- **Informes:** texto explicativo y dos botones para abrir informes en una nueva pestaña del navegador: uno de **Inventario** y otro de **Pedidos**. Desde esa pestaña podrás usar la opción del navegador **“Imprimir” → “Guardar como PDF”** si quieres el PDF físico.
 - **Gestión de productos:** botón **“Añadir producto”**, formulario (nombre, descripción, categoría, stock, umbral crítico, imagen) y una **lista de productos** con botones **“Editar”** y **“Desactivar”** en cada uno. Al desactivar, la página pide **confirmación** antes de hacerlo.
 - **Gestión de usuarios:** un bloque con el enlace **“Ir a Gestión de usuarios”** que lleva a una página donde el administrador puede ver todos los usuarios y cambiar su rol, activar/desactivar la cuenta o eliminar usuarios (ver apartado 11).
 
@@ -240,7 +242,10 @@ Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si fa
 
 **Qué puede hacer solo el Administrador aquí:**
 
-1. **Exportar PDF:** Pulsar **“Inventario (PDF)”** o **“Pedidos (PDF)”** para descargar el informe correspondiente.
+1. **Ver informes:** Pulsar el botón de **Inventario** o **Pedidos** para abrir el informe correspondiente en una nueva pestaña.
+   - En el **informe de Inventario** verás una tabla con cada producto, su stock y un **precio unitario simulado**, además del **valor total** de cada línea y un **resumen final** con el valor económico total del inventario.
+   - En el **informe de Pedidos** verás la tabla de pedidos y, al final, un **resumen de consumo mensual por departamento** (simulado), para que el administrador pueda ver en qué área se está gastando más material cada mes.
+   - Si necesitas un PDF físico, usa en esa pestaña la opción del navegador **“Imprimir”** y elige **“Guardar como PDF”**.
 2. **Añadir producto:** Pulsar **“Añadir producto”**, rellenar el formulario (nombre obligatorio, categoría obligatoria, resto opcional) y pulsar **“Guardar”**.
 3. **Editar producto:** Pulsar **“Editar”** en un producto de la lista, cambiar los datos en el formulario y pulsar **“Guardar”**.
 4. **Desactivar producto:** Pulsar **“Desactivar”**; confirmar en el mensaje que aparece. El producto deja de mostrarse en el catálogo pero no se borra de la base de datos.
@@ -301,7 +306,7 @@ Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishli
 
 - **Mensajes en rojo:** errores (credenciales incorrectas, email ya usado, contraseñas no coinciden, campos obligatorios, etc.).
 - **Mensajes en verde:** éxito (cuenta creada, solicitud enviada, estado actualizado, etc.).
-- **Ventanas emergentes (SweetAlert):** confirmaciones (por ejemplo antes de aprobar, denegar o desactivar), avisos de stock bajo (una vez por sesión en Dashboard para admin/staff) y errores de conexión (“Comprueba tu conexión e intenta de nuevo”).
+- **Ventanas emergentes (SweetAlert):** confirmaciones (por ejemplo antes de aprobar, denegar o desactivar), avisos de stock bajo (una vez por sesión en Dashboard para admin/staff) y errores de conexión (“Comprueba tu conexión e intenta de nuevo”). En muchos casos el cuadro emergente muestra el **isotipo hexagonal de s6s** en grande como icono, en lugar del icono genérico verde o rojo.
 - **Estados de carga:** mientras se cargan datos (inventario, wishlist, etc.) pueden verse textos como “Cargando catálogo…” o “Cargando propuestas…” y, en algunas pantallas, animaciones de carga (skeletons).
 
 Si ves un mensaje de error de conexión, comprueba que tienes internet o que el servidor de la aplicación está encendido.
@@ -318,4 +323,5 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 | (fecha de hoy) | Datos de prueba ampliados: 7 usuarios (1 admin, 1 staff, 5 empleados), 18 productos (varios con stock bajo umbral, 1 inactivo), 17 pedidos en todos los estados, 9 propuestas wishlist y múltiples votos. **Nota:** estos datos se insertan solo si la base está vacía al iniciar la app. Si ya tenías datos, para cargar los nuevos borra la base de datos en MySQL y vuelve a entrar (login) para que se recreen tablas y se inserten los datos de prueba. |
 | (fecha de hoy) | **Gestión de usuarios** (solo administrador): nueva página accesible desde Administración o desde el menú. Listado de usuarios con cambio de rol (empleado/staff/administrador), activar/desactivar cuenta (los desactivados no pueden iniciar sesión) y eliminar usuario. No se puede eliminar ni desactivar la propia cuenta. Manual actualizado con apartado 11 y renumeración de secciones. |
 | (fecha de hoy) | Añadida nota al inicio: este es el manual de **uso**; para documentación técnica del código ver **MANUAL_TECNICO.md**. |
+| (fecha de hoy) | Inventario: tarjetas de productos en **stock crítico** con aviso “Stock bajo”, borde ligeramente anaranjado y barra de color rojo/naranja que indica visualmente lo cerca que está el stock del umbral crítico. Informes: informes de Inventario y Pedidos en HTML con cabecera corporativa (logo arriba a la derecha y línea azul), valor económico total del inventario y resumen mensual de consumo por departamento; se pueden imprimir o guardar como PDF desde el navegador. Wishlist: al votar, el botón pasa a **“Votado”** sin recargar la página. SweetAlert2: cuadros de diálogo de confirmación y éxito usando el isotipo de s6s como icono. |
 
