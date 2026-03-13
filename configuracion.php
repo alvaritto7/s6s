@@ -37,6 +37,7 @@ define('ACCION_PETICIONES', 'peticiones');
 define('ACCION_WISHLIST', 'wishlist');
 define('ACCION_ADMIN', 'admin');
 define('ACCION_ADMIN_USUARIOS', 'admin_usuarios');
+define('ACCION_MI_CUENTA', 'mi_cuenta');
 define('ACCION_API', 'api');
 
 // Identidad visual: logotipo e isotipo

@@ -21,10 +21,11 @@
 9. [Wishlist](#9-wishlist)
 10. [Administración](#10-administración)
 11. [Gestión de usuarios](#11-gestión-de-usuarios)
-12. [Cerrar sesión](#12-cerrar-sesión)
-13. [Elementos que ves en todas las páginas](#13-elementos-que-ves-en-todas-las-páginas)
-14. [Mensajes que puede mostrar la página](#14-mensajes-que-puede-mostrar-la-página)
-15. [Historial de cambios del manual](#15-historial-de-cambios-del-manual)
+12. [Mi cuenta](#12-mi-cuenta)
+13. [Cerrar sesión](#13-cerrar-sesión)
+14. [Elementos que ves en todas las páginas](#14-elementos-que-ves-en-todas-las-páginas)
+15. [Mensajes que puede mostrar la página](#15-mensajes-que-puede-mostrar-la-página)
+16. [Historial de cambios del manual](#16-historial-de-cambios-del-manual)
 
 ---
 
@@ -207,6 +208,7 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 - **Lista de propuestas:** cada una muestra título, descripción (si tiene), quién la propuso, fecha, **número de votos** y, según tu caso:
   - Un botón **“Votar”** si todavía no has votado esa propuesta.
   - Un botón desactivado **“Votado”** si ya la has votado (así ves claramente que ya has participado en esa propuesta).
+  - Si la propuesta es **tuya**, verás la etiqueta **“Tu propuesta”** en azul sobre la tarjeta para identificarla rápido.
 
 **Qué puedes hacer:**
 
@@ -278,7 +280,27 @@ Si intentas desactivarte a ti mismo o eliminarte desde la API, verás un mensaje
 
 ---
 
-## 12. Cerrar sesión
+## 12. Mi cuenta
+
+**Qué es:** Página donde **cualquier usuario logueado** puede ver sus datos (nombre, email, rol) y **cambiar su nombre** o **cambiar su contraseña**.
+
+**Quién puede entrar:** Empleado, staff y administrador (todos los que tengan sesión iniciada).
+
+**Cómo llegar:** En el **menú de la cabecera** aparece el enlace **“Mi cuenta”** (entre Wishlist y Administración). También puedes ir desde el Dashboard o escribiendo la dirección correspondiente.
+
+**Qué ves:**
+
+- **Datos de la cuenta:** tu **nombre** (editable en un cuadro de texto), tu **email** (solo lectura) y tu **rol** (solo lectura). Un botón **“Guardar nombre”** para guardar los cambios de nombre.
+- **Cambiar contraseña:** tres campos: **Contraseña actual**, **Nueva contraseña** y **Repetir nueva contraseña**. La nueva debe tener al menos 6 caracteres. Botón **“Cambiar contraseña”** para aplicar el cambio.
+
+**Qué puedes hacer:**
+
+1. **Cambiar tu nombre:** Escribe el nuevo nombre en el cuadro y pulsa **“Guardar nombre”**. Verás un mensaje de confirmación y el nombre se actualizará en la cabecera en la próxima carga (o de inmediato si la página se refresca).
+2. **Cambiar tu contraseña:** Rellena la contraseña actual y la nueva (y su repetición). Si la contraseña actual no es correcta o las dos nuevas no coinciden, la aplicación te avisará. Si todo es correcto, verás un mensaje de éxito y ya podrás iniciar sesión con la nueva contraseña.
+
+---
+
+## 13. Cerrar sesión
 
 **Qué es:** Salir de tu cuenta para que nadie que use el mismo ordenador pueda seguir con tu sesión.
 
@@ -288,13 +310,13 @@ Si intentas desactivarte a ti mismo o eliminarte desde la API, verás un mensaje
 
 ---
 
-## 13. Elementos que ves en todas las páginas
+## 14. Elementos que ves en todas las páginas
 
-Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishlist**, **Administración** y (solo administrador) **Gestión de usuarios** verás siempre:
+Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishlist**, **Mi cuenta**, **Administración** y (solo administrador) **Gestión de usuarios** verás siempre:
 
 - **Cabecera (arriba):**
   - **Logo (isotipo):** al pulsarlo vas al **Dashboard** (página principal).
-  - **Menú:** enlaces a Inventario, Peticiones, Wishlist, Administración y, si eres **administrador**, también **Gestión de usuarios**. El enlace de la página en la que estás suele verse resaltado (subrayado o en otro color).
+  - **Menú:** enlaces a Inventario, Peticiones, Wishlist, **Mi cuenta**, Administración (si tienes permiso) y, si eres **administrador**, también **Gestión de usuarios**. El enlace de la página en la que estás suele verse resaltado (subrayado o en otro color).
   - **Tu nombre y rol:** por ejemplo “María García (empleado)”.
   - **Cerrar sesión:** botón para salir de la sesión (ver apartado 12).
 - **En móvil o pantalla pequeña:** un botón **“Menú”** que abre/cierra el menú de navegación.
@@ -302,7 +324,7 @@ Una vez dentro (después del login), en **Inventario**, **Peticiones**, **Wishli
 
 ---
 
-## 14. Mensajes que puede mostrar la página
+## 15. Mensajes que puede mostrar la página
 
 - **Mensajes en rojo:** errores (credenciales incorrectas, email ya usado, contraseñas no coinciden, campos obligatorios, etc.).
 - **Mensajes en verde:** éxito (cuenta creada, solicitud enviada, estado actualizado, etc.).
@@ -313,7 +335,7 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 
 ---
 
-## 15. Historial de cambios del manual
+## 16. Historial de cambios del manual
 
 **Cómo mantener el manual al día:** Cada vez que en la aplicación se **añada** una pantalla, botón o funcionalidad, **se quite** algo o **se cambie** el comportamiento (por ejemplo permisos de roles), actualiza este documento en la sección correspondiente y añade una línea abajo con la fecha y el cambio.
 
@@ -324,4 +346,5 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 | (fecha de hoy) | **Gestión de usuarios** (solo administrador): nueva página accesible desde Administración o desde el menú. Listado de usuarios con cambio de rol (empleado/staff/administrador), activar/desactivar cuenta (los desactivados no pueden iniciar sesión) y eliminar usuario. No se puede eliminar ni desactivar la propia cuenta. Manual actualizado con apartado 11 y renumeración de secciones. |
 | (fecha de hoy) | Añadida nota al inicio: este es el manual de **uso**; para documentación técnica del código ver **MANUAL_TECNICO.md**. |
 | (fecha de hoy) | Inventario: tarjetas de productos en **stock crítico** con aviso “Stock bajo”, borde ligeramente anaranjado y barra de color rojo/naranja que indica visualmente lo cerca que está el stock del umbral crítico. Informes: informes de Inventario y Pedidos en HTML con cabecera corporativa (logo arriba a la derecha y línea azul), valor económico total del inventario y resumen mensual de consumo por departamento; se pueden imprimir o guardar como PDF desde el navegador. Wishlist: al votar, el botón pasa a **“Votado”** sin recargar la página. SweetAlert2: cuadros de diálogo de confirmación y éxito usando el isotipo de s6s como icono. |
+| (fecha de hoy) | **Mi cuenta:** nueva página accesible desde el menú para todos los usuarios. Permite ver nombre, email y rol; editar el nombre (Guardar nombre) y cambiar la contraseña (contraseña actual + nueva + repetición). Wishlist: las propuestas creadas por el usuario actual muestran la etiqueta **"Tu propuesta"** en azul para identificarlas. |
 

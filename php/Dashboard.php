@@ -33,6 +33,7 @@ class Dashboard
         }
         $enlaceAdmin = $puedeAdmin ? '<li><a href="index.php?accion=admin">Administración</a></li>' : '';
         $enlaceGestionUsuarios = ($rolUsuario === ROL_ADMINISTRADOR) ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
+        $enlaceMiCuenta = '<li><a href="index.php?accion=mi_cuenta">Mi cuenta</a></li>';
         $enlaceAdminCard = $puedeAdmin ? '<a href="index.php?accion=admin" class="dashboard-card dashboard-card-admin"><span class="dashboard-card-icono" aria-hidden="true">⚙</span><span class="dashboard-card-titulo">Administración</span><span class="dashboard-card-desc">Informes, productos y pedidos</span></a>' : '';
 
         $footer = cargarPlantilla('html/componentes/footer.html', ['ANIO' => date('Y')]);
@@ -43,6 +44,7 @@ class Dashboard
             'ROL_USUARIO' => htmlspecialchars($rolUsuario),
             'ENLACE_ADMIN' => $enlaceAdmin,
             'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
+            'ENLACE_MI_CUENTA' => $enlaceMiCuenta,
             'BLOQUE_ALERTAS' => $bloqueAlertas,
             'ENLACE_ADMIN_CARD' => $enlaceAdminCard,
             'ALERTAS_CANTIDAD' => (string) count($alertasStock),

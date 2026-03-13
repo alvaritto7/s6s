@@ -896,6 +896,24 @@ body {
     color: var(--azul-electrico);
 }
 
+.item-propuesta-mia {
+    border-left-color: var(--azul-electrico);
+    box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.2);
+}
+.item-propuesta-mia .titulo-propuesta { margin-top: 0.25rem; }
+.badge-mi-propuesta {
+    display: inline-block;
+    background: var(--azul-electrico);
+    color: var(--blanco);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35rem;
+}
+
 /* Badges de estado (workflow) */
 .badge {
     display: inline-block;
@@ -1207,3 +1225,121 @@ body {
 .pagina-login .pie-pagina {
     width: 100%;
 }
+
+/* --- Mi cuenta --- */
+.pagina-mi-cuenta .contenido-mi-cuenta {
+    width: 100%;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2rem 1.5rem 3rem;
+}
+.mi-cuenta-hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 0 1rem;
+}
+.mi-cuenta-hero h1 {
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    color: var(--blanco);
+    letter-spacing: 0.02em;
+}
+.mi-cuenta-subtitulo {
+    font-size: 1.05rem;
+    color: var(--gris-texto);
+    margin: 0;
+}
+.mi-cuenta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 768px) {
+    .mi-cuenta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.mi-cuenta-seccion {
+    padding: 1.75rem 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(30, 35, 48, 0.95) 0%, rgba(22, 26, 36, 0.98) 100%);
+    border: 1px solid var(--gris-borde);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 163, 255, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+.mi-cuenta-seccion::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--azul-electrico), rgba(0, 163, 255, 0.5));
+    opacity: 0.9;
+}
+.mi-cuenta-seccion-icono {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.9;
+    line-height: 1;
+}
+.mi-cuenta-titulo-seccion {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--azul-electrico);
+    margin: 0 0 1.25rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 163, 255, 0.2);
+    letter-spacing: 0.02em;
+}
+.mi-cuenta-campos { margin-bottom: 1.25rem; }
+.mi-cuenta-campo {
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.mi-cuenta-campo:last-of-type { margin-bottom: 0; }
+.mi-cuenta-etiqueta {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--gris-texto);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.mi-cuenta-input {
+    padding: 0.65rem 0.85rem;
+    background: var(--antracita);
+    border: 1px solid var(--gris-borde);
+    border-radius: 8px;
+    color: var(--blanco);
+    font-size: 1rem;
+    width: 100%;
+    max-width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.mi-cuenta-input:focus {
+    outline: none;
+    border-color: var(--azul-electrico);
+    box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.25);
+}
+.mi-cuenta-solo-lectura .mi-cuenta-valor {
+    color: var(--blanco);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    font-weight: 500;
+}
+.mi-cuenta-acciones { margin-top: 1.25rem; }
+.mi-cuenta-ayuda {
+    font-size: 0.9rem;
+    color: var(--gris-texto);
+    margin-bottom: 1.25rem;
+    line-height: 1.4;
+}
+.mi-cuenta-form-clave .mi-cuenta-etiqueta { display: block; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+.mi-cuenta-form-clave .mi-cuenta-etiqueta:first-of-type { margin-top: 0; }
+.mi-cuenta-form-clave .mi-cuenta-input { margin-bottom: 0; }
+.mi-cuenta-form-clave .mi-cuenta-acciones { margin-top: 1.5rem; }

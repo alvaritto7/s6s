@@ -54,6 +54,7 @@ class Admin
             ? '<section class="admin-gestion-usuarios" aria-labelledby="titulo-gestion-usuarios"><h2 id="titulo-gestion-usuarios">Gestión de usuarios</h2><p class="color-gris">Cambiar rol (empleado, staff, administrador), activar o desactivar cuentas y eliminar usuarios.</p><p><a href="index.php?accion=admin_usuarios" class="boton boton-primario">Ir a Gestión de usuarios</a></p></section>'
             : '';
         $enlaceGestionUsuarios = $esAdministrador ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
+        $enlaceMiCuenta = '<li><a href="index.php?accion=mi_cuenta">Mi cuenta</a></li>';
 
         $html = cargarPlantilla('html/admin.html', [
             'ASSET_ISOTIPO' => ASSET_ISOTIPO,
@@ -69,6 +70,7 @@ class Admin
             'BLOQUE_GESTION_PRODUCTOS' => $bloqueGestionProductos,
             'BLOQUE_GESTION_USUARIOS' => $bloqueGestionUsuarios,
             'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
+            'ENLACE_MI_CUENTA' => $enlaceMiCuenta,
             'FOOTER' => $footer,
         ]);
         echo $html;

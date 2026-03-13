@@ -18,6 +18,7 @@ class Inventario
         $puedeAdmin = ($rolUsuario === ROL_ADMINISTRADOR || $rolUsuario === ROL_STAFF);
         $enlaceAdmin = $puedeAdmin ? '<li><a href="index.php?accion=admin">Administración</a></li>' : '';
         $enlaceGestionUsuarios = ($rolUsuario === ROL_ADMINISTRADOR) ? '<li><a href="index.php?accion=admin_usuarios">Gestión de usuarios</a></li>' : '';
+        $enlaceMiCuenta = '<li><a href="index.php?accion=mi_cuenta">Mi cuenta</a></li>';
 
         $listaCategorias = '';
         foreach ($categorias as $cat) {
@@ -33,6 +34,7 @@ class Inventario
             'ACCION_DASHBOARD' => ACCION_DASHBOARD,
             'ENLACE_ADMIN' => $enlaceAdmin,
             'ENLACE_GESTION_USUARIOS' => $enlaceGestionUsuarios,
+            'ENLACE_MI_CUENTA' => $enlaceMiCuenta,
             'NOMBRE_USUARIO' => htmlspecialchars($nombreUsuario),
             'ROL_USUARIO' => htmlspecialchars($rolUsuario),
             'LISTA_CATEGORIAS' => $listaCategorias,

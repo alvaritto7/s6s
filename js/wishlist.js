@@ -61,13 +61,16 @@
         var votos = typeof propuesta.votos === 'number' ? propuesta.votos : 0;
         var autor = propuesta.autor_nombre || '';
         var fecha = propuesta.fecha_creacion || '';
+        var esMia = !!propuesta.es_mia;
 
         var item = document.createElement('article');
-        item.className = 'item-propuesta';
+        item.className = 'item-propuesta' + (esMia ? ' item-propuesta-mia' : '');
         item.setAttribute('role', 'listitem');
         item.setAttribute('data-id', String(id));
 
-        var html = '<h3 class="titulo-propuesta">' + escapeHtml(titulo) + '</h3>';
+        var html = '';
+        if (esMia) html += '<span class="badge-mi-propuesta">Tu propuesta</span>';
+        html += '<h3 class="titulo-propuesta">' + escapeHtml(titulo) + '</h3>';
         if (descripcion) {
             html += '<p class="descripcion-propuesta">' + escapeHtml(descripcion) + '</p>';
         }

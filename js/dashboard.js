@@ -17,15 +17,12 @@
     sessionStorage.setItem(claveSesion, '1');
 
     var isotipo = cuerpo.getAttribute('data-isotipo') || '';
-    var opciones = {
+    window.Swal.fire({
         title: 'Stock bajo umbral',
         text: 'Hay ' + cantidad + ' producto(s) con stock en o por debajo del umbral crítico. Revisa la sección de alertas en el panel.',
         imageUrl: isotipo || undefined,
-        imageHeight: 60,
-        imageWidth: 60,
         confirmButtonColor: '#00A3FF',
         background: '#11141d',
         color: '#f5f5f5'
-    };
-    window.Swal.fire(opciones);
+    });
 })();

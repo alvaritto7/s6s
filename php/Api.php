@@ -85,6 +85,12 @@ class Api
             case 'usuario_eliminar':
                 $this->procesarUsuarioEliminar();
                 break;
+            case 'mi_perfil':
+                $this->devolverMiPerfil();
+                break;
+            case 'actualizar_perfil':
+                $this->procesarActualizarPerfil();
+                break;
             default:
                 $this->responderJson(['error' => 'Recurso no válido', 'recurso' => $recurso], 400);
         }
@@ -319,6 +325,7 @@ class Api
         foreach ($propuestas as &$p) {
             $p['ya_votado'] = $this->bd->usuarioYaVoto((int)($p['id'] ?? 0), $usuarioId);
             $p['autor_nombre'] = $usuarios[(int)($p['usuario_id'] ?? 0)] ?? '';
+            $p['es_mia'] = ((int)($p['usuario_id'] ?? 0) === $usuarioId);
         }
         unset($p);
         $this->responderJson(['propuestas' => $propuestas]);
@@ -677,5 +684,73 @@ class Api
         }
         $this->bd->eliminarUsuario($id);
         $this->responderJson(['ok' => true]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Mi cuenta (usuario logueado)
+    // -------------------------------------------------------------------------
+
+    /** Devuelve nombre, email y rol del usuario actual. */
+    private function devolverMiPerfil(): void
+    {
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        $usuario = $usuarioId > 0 ? $this->bd->obtenerUsuarioPorId($usuarioId) : null;
+        if (!$usuario) {
+            $this->responderJson(['error' => 'No autorizado'], 401);
+            return;
+        }
+        $this->responderJson([
+            'nombre' => $usuario['nombre'] ?? $_SESSION['usuario_nombre'] ?? '',
+            'email' => $usuario['email'] ?? '',
+            'rol' => $usuario['rol'] ?? $_SESSION['usuario_rol'] ?? ROL_EMPLEADO,
+        ]);
+    }
+
+    /** Actualiza nombre y/o contraseña del usuario actual. POST con JSON: nombre?, password_actual?, password_nueva? */
+    private function procesarActualizarPerfil(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson(['error' => 'Método no permitido'], 405);
+            return;
+        }
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        $usuario = $usuarioId > 0 ? $this->bd->obtenerUsuarioPorId($usuarioId) : null;
+        if (!$usuario) {
+            $this->responderJson(['error' => 'No autorizado', 'ok' => false], 401);
+            return;
+        }
+        $input = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actualizaciones = [];
+
+        $nombre = isset($input['nombre']) ? trim((string) $input['nombre']) : '';
+        if ($nombre !== '') {
+            $actualizaciones['nombre'] = $nombre;
+        }
+
+        $passwordActual = isset($input['password_actual']) ? (string) $input['password_actual'] : '';
+        $passwordNueva = isset($input['password_nueva']) ? (string) $input['password_nueva'] : '';
+        if ($passwordActual !== '' && $passwordNueva !== '') {
+            $claveGuardada = $usuario['password'] ?? '';
+            if ($passwordActual !== $claveGuardada) {
+                $this->responderJson(['error' => 'La contraseña actual no es correcta', 'ok' => false], 400);
+                return;
+            }
+            if (strlen($passwordNueva) < 6) {
+                $this->responderJson(['error' => 'La nueva contraseña debe tener al menos 6 caracteres', 'ok' => false], 400);
+                return;
+            }
+            $actualizaciones['password'] = $passwordNueva;
+        }
+
+        if (empty($actualizaciones)) {
+            $this->responderJson(['error' => 'No hay datos que actualizar', 'ok' => false], 400);
+            return;
+        }
+
+        $this->bd->actualizarUsuario($usuarioId, $actualizaciones);
+        if (isset($actualizaciones['nombre'])) {
+            $_SESSION['usuario_nombre'] = $actualizaciones['nombre'];
+        }
+        $this->responderJson(['ok' => true, 'mensaje' => 'Perfil actualizado correctamente']);
     }
 }

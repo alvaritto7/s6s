@@ -46,6 +46,7 @@ s6s/
 │   ├── Wishlist.php      # Página de propuestas y votos
 │   ├── Admin.php         # Panel administración (gráficos, informes, productos; staff/admin)
 │   ├── GestionUsuarios.php # Página gestión de usuarios (solo administrador)
+│   ├── MiCuenta.php      # Página Mi cuenta (datos, nombre, contraseña)
 │   └── Api.php           # Respuestas JSON y HTML (informes); recurso en GET/POST
 ├── html/
 │   ├── login.html
@@ -54,6 +55,7 @@ s6s/
 │   ├── inventario.html
 │   ├── peticiones.html
 │   ├── wishlist.html
+│   ├── mi_cuenta.html
 │   ├── admin.html
 │   ├── admin_usuarios.html
 │   └── componentes/
@@ -65,7 +67,8 @@ s6s/
 │   ├── dashboard.js      # Popup alertas de stock (una vez por sesión)
 │   ├── inventario.js     # Filtros, búsqueda, modal solicitar material, llamadas API
 │   ├── peticiones.js     # Nueva solicitud, cambiar estado, filtros
-│   ├── wishlist.js       # Cargar propuestas, votar, crear propuesta
+│   ├── wishlist.js       # Cargar propuestas, votar, crear propuesta (incl. badge "Tu propuesta")
+│   ├── mi-cuenta.js      # Guardar nombre y cambiar contraseña vía API
 │   ├── admin.js          # Gráficos Chart.js
 │   ├── admin-productos.js # CRUD productos (listar, añadir, editar, desactivar)
 │   └── admin-usuarios.js # Listar usuarios, cambiar rol, activo, eliminar
@@ -91,8 +94,9 @@ s6s/
    - **dashboard** → carga `Dashboard.php` y ejecuta `ejecutar()`.
    - **inventario** → carga `Inventario.php` y ejecuta `ejecutar()`.
    - **peticiones** → carga `Peticiones.php` y ejecuta `ejecutar()`.
-   - **wishlist** → carga `Wishlist.php` y ejecuta `ejecutar()`.
-   - **admin:** Comprueba que el rol sea administrador o staff; si no, redirige a dashboard. Carga `Admin.php` y ejecuta `ejecutar()`.
+- **wishlist** → carga `Wishlist.php` y ejecuta `ejecutar()`.
+  - **mi_cuenta** → carga `MiCuenta.php` y ejecuta `ejecutar()` (cualquier usuario logueado).
+  - **admin:** Comprueba que el rol sea administrador o staff; si no, redirige a dashboard. Carga `Admin.php` y ejecuta `ejecutar()`.
    - **admin_usuarios:** Comprueba que el rol sea administrador; si no, redirige a dashboard. Carga `GestionUsuarios.php` y ejecuta `ejecutar()`.
    - Cualquier otra acción → redirige a **login**.
 
@@ -126,6 +130,7 @@ Cada controlador (Login, Dashboard, etc.) suele construir HTML con `cargarPlanti
 | `ACCION_WISHLIST` | `'wishlist'`. |
 | `ACCION_ADMIN` | `'admin'`. |
 | `ACCION_ADMIN_USUARIOS` | `'admin_usuarios'`. |
+| `ACCION_MI_CUENTA` | `'mi_cuenta'`. |
 | `ACCION_API` | `'api'`. |
 | `ASSET_LOGOTIPO` | Ruta relativa del logotipo (p. ej. `'imagenes/logotipo_transparente.png'`). |
 | `ASSET_ISOTIPO` | Ruta relativa del isotipo. |
@@ -285,6 +290,10 @@ Cada controlador se instancia desde **index.php** y se llama a **`ejecutar()`**.
 
 - **`ejecutar(): void`** — Si el rol no es administrador, redirige a dashboard. Carga `html/admin_usuarios.html` con NOMBRE_USUARIO, ROL_USUARIO, USUARIO_ID (id del usuario en sesión para que el JS no muestre “Eliminar” en su fila), FOOTER. La tabla de usuarios se rellena por admin-usuarios.js (API usuarios, usuario_actualizar_rol, usuario_actualizar_activo, usuario_eliminar).
 
+### MiCuenta.php
+
+- **`ejecutar(): void`** — Cualquier usuario logueado. Obtiene el usuario por ID desde BD (para el email), construye ENLACE_MI_CUENTA (activo), ENLACE_ADMIN y ENLACE_GESTION_USUARIOS según rol. Carga `html/mi_cuenta.html` con NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO y placeholders de cabecera. La edición del nombre y el cambio de contraseña se envían por mi-cuenta.js a la API (actualizar_perfil).
+
 ---
 
 ## 8. php/Api.php (recursos y métodos)
@@ -304,10 +313,11 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | categorias | devolverCategorias | { categorias: [...] } |
 | productos | devolverProductos | { productos: [...] } (solo productos activos por defecto; si el usuario es administrador y se llama con `&todos=1`, devuelve activos e inactivos). Cada producto incluye `stock_disponible`. |
 | alertas_stock | devolverAlertasStock | { alertas: [...] } (productos bajo umbral) |
-| propuestas | devolverPropuestas | { propuestas: [...], votosPorPropuesta: {...}, usuarioYaVoto: {...} } (propuestas ordenadas por votos, conteos y si el usuario ya votó cada una) |
+| propuestas | devolverPropuestas | { propuestas: [...] } (ordenadas por votos). Cada propuesta incluye ya_votado, autor_nombre y es_mia (true si el autor es el usuario en sesión). |
 | pdf_inventario | generarPdfInventario | Informe HTML de inventario con cabecera corporativa (logo y línea azul), detalle por producto (incluyendo precio unitario simulado y valor total) y suma total del valor del inventario. Solo administrador; el navegador puede imprimir/guardar como PDF. |
 | pdf_pedidos | generarPdfPedidos | Informe HTML de pedidos con cabecera corporativa y, al final, tabla de **resumen mensual por departamento** (simulado) con importes calculados usando el precio unitario simulado. Solo administrador; el navegador puede imprimir/guardar como PDF. |
 | usuarios | devolverUsuarios | { usuarios: [...] } sin campo password (solo administrador; si no 403). |
+| mi_perfil | devolverMiPerfil | { nombre, email, rol } del usuario en sesión. |
 
 **Recursos POST (acción):**
 
@@ -323,6 +333,7 @@ La API se invoca con **index.php?accion=api&recurso=nombre_recurso**. Requiere s
 | usuario_actualizar_rol | procesarUsuarioActualizarRol | id, rol (empleado|staff|administrador) | Solo administrador |
 | usuario_actualizar_activo | procesarUsuarioActualizarActivo | id, activo (0|1). No permite desactivar al usuario actual. | Solo administrador |
 | usuario_eliminar | procesarUsuarioEliminar | id. No permite eliminar al usuario actual. | Solo administrador |
+| actualizar_perfil | procesarActualizarPerfil | nombre (opcional), password_actual + password_nueva (opcional). Actualiza nombre y/o contraseña del usuario en sesión. | Cualquier usuario logueado |
 
 **Métodos privados adicionales:**
 
@@ -342,12 +353,13 @@ Cada plantilla usa placeholders `{{NOMBRE}}` que el controlador reemplaza con `c
 | **html/dashboard.html** | ASSET_*, NOMBRE_USUARIO, ROL_USUARIO, ENLACE_ADMIN, BLOQUE_ALERTAS, ENLACE_ADMIN_CARD, ALERTAS_CANTIDAD, PUEDE_ADMIN (data-* para JS), FOOTER |
 | **html/inventario.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, LISTA_CATEGORIAS, FOOTER |
 | **html/peticiones.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, BLOQUE_STAFF_PENDIENTES, BLOQUE_STAFF_REVISION, LISTA_MIS_PETICIONES, FOOTER |
-| **html/wishlist.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, NOMBRE_USUARIO, ROL_USUARIO, FOOTER |
+| **html/wishlist.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_MI_CUENTA, NOMBRE_USUARIO, ROL_USUARIO, FOOTER |
+| **html/mi_cuenta.html** | ASSET_*, ACCION_DASHBOARD, ENLACE_ADMIN, ENLACE_GESTION_USUARIOS, ENLACE_MI_CUENTA, NOMBRE_USUARIO, EMAIL_USUARIO, ROL_USUARIO, FOOTER |
 | **html/admin.html** | ASSET_*, ACCION_DASHBOARD, NOMBRE_USUARIO, ROL_USUARIO, TOTAL_PRODUCTOS, TOTAL_PEDIDOS, TOTAL_ALERTAS, DATOS_GRAFICOS, BLOQUE_INFORMES_PDF, BLOQUE_GESTION_PRODUCTOS, BLOQUE_GESTION_USUARIOS, FOOTER |
 | **html/admin_usuarios.html** | ASSET_*, ACCION_DASHBOARD, NOMBRE_USUARIO, ROL_USUARIO, USUARIO_ID (data-usuario-id en body), FOOTER |
 | **html/componentes/footer.html** | ANIO |
 
-Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, nav (Inventario, Peticiones, Wishlist, Administración y si aplica Gestión de usuarios), nombre de usuario, rol y formulario de Cerrar sesión (POST accion=logout).
+Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, nav (Inventario, Peticiones, Wishlist, Mi cuenta, Administración y si aplica Gestión de usuarios), nombre de usuario, rol y formulario de Cerrar sesión (POST accion=logout).
 
 ---
 
@@ -365,6 +377,7 @@ Las páginas internas (dashboard, inventario, etc.) incluyen cabecera con logo, 
 | **admin.js** | Lee `#datos-graficos` (JSON con categorias y estados). Inicializa dos gráficos Chart.js (productos por categoría, pedidos por estado). |
 | **admin-productos.js** | Lista productos vía API `productos&todos=1` (el admin ve también inactivos); botones Editar y Desactivar. Formulario para añadir/editar (nombre, descripción, categoría, stock, umbral, imagen); envío con API `producto_crear` o `producto_actualizar`. Desactivar con confirmación → API `producto_eliminar`. |
 | **admin-usuarios.js** | Lista usuarios vía API `usuarios`. Tabla con select de rol y de activo; al cambiar, POST a `usuario_actualizar_rol` o `usuario_actualizar_activo`. Botón Eliminar (excepto en la fila del usuario actual, usando data-usuario-id) con confirmación → API `usuario_eliminar`. |
+| **mi-cuenta.js** | "Guardar nombre" envía POST a `actualizar_perfil` con `{ nombre }`. Formulario cambiar contraseña valida nueva = repetición (mín. 6 caracteres) y envía POST con `{ password_actual, password_nueva }`. SweetAlert para éxito/error. |
 
 ---
 
@@ -382,4 +395,5 @@ Cada vez que añadas o quites un archivo, un método público, un recurso de la 
 |------------|--------|
 | (fecha de hoy) | Creación del manual técnico. Documentados: estructura del proyecto, index.php, configuracion.php, Plantillas.php, BaseDeDatos (esquema y métodos), controladores Login, Registro, Dashboard, Inventario, Peticiones, Wishlist, Admin, GestionUsuarios, Api (todos los recursos), plantillas HTML, JS y CSS. Diferenciación clara con MANUAL_USO.md. |
 | (fecha de hoy) | Añadidos: `BaseDeDatos::obtenerPrecioUnitarioSimulado()` para tener un precio_unitario simulado sin cambiar el esquema de BD; API `devolverProductos` con soporte `todos=1` para que el admin vea también productos inactivos; `Api::resolverDepartamentoSimulado()` y lógica de **resumen de consumo mensual por departamento** en `generarPdfPedidos()`. Actualizados los informes HTML de inventario y pedidos con cabeceras corporativas (logo completo arriba derecha y línea azul) y valor económico. Documentadas las barras de stock crítico en `inventario.js`/CSS y la actualización en caliente del botón de votos en `wishlist.js`. |
+| (fecha de hoy) | **Mi cuenta:** nueva acción `ACCION_MI_CUENTA`, controlador `MiCuenta.php`, plantilla `html/mi_cuenta.html`, script `mi-cuenta.js`. API: GET `mi_perfil` (nombre, email, rol) y POST `actualizar_perfil` (nombre y/o password_actual + password_nueva). Enlace "Mi cuenta" en la cabecera de todas las páginas internas. **Wishlist:** en `devolverPropuestas` se añade `es_mia` por propuesta; en `wishlist.js` y CSS se muestra la etiqueta "Tu propuesta" y la clase `.item-propuesta-mia`. |
 

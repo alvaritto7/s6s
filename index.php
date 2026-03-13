@@ -79,6 +79,12 @@ if ($accion === ACCION_WISHLIST) {
     exit;
 }
 
+if ($accion === ACCION_MI_CUENTA) {
+    require_once RUTA_RAIZ . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'MiCuenta.php';
+    (new MiCuenta())->ejecutar();
+    exit;
+}
+
 if ($accion === ACCION_ADMIN) {
     $rol = $_SESSION['usuario_rol'] ?? '';
     if ($rol !== ROL_ADMINISTRADOR && $rol !== ROL_STAFF) {
