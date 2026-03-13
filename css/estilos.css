@@ -416,6 +416,13 @@ body {
     min-width: 140px;
 }
 
+.pie-logo {
+    display: block;
+    max-width: 180px;
+    height: auto;
+    margin-bottom: 0.3rem;
+}
+
 .pie-marca .pie-nombre {
     font-size: 1.25rem;
     font-weight: 700;
@@ -519,8 +526,8 @@ body {
 }
 
 .alertas-dashboard {
-    background: rgba(0, 163, 255, 0.08);
-    border: 1px solid rgba(0, 163, 255, 0.35);
+    background: rgba(255, 78, 80, 0.08);
+    border: 1px solid rgba(255, 78, 80, 0.5);
     border-radius: 10px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
@@ -530,7 +537,7 @@ body {
 .titulo-alertas {
     margin: 0 0 0.5rem;
     font-size: 1rem;
-    color: var(--azul-electrico);
+    color: #ff4e50;
 }
 
 .lista-alertas {
