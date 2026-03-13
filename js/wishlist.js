@@ -83,9 +83,9 @@
         }
         html += '<p class="votos"><span class="votos-numero">' + votos + '</span> voto' + (votos !== 1 ? 's' : '') + '</p>';
         if (!yaVotado) {
-            html += '<button type="button" class="boton boton-primario boton-votar" data-propuesta-id="' + escapeHtml(String(id)) + '">Votar</button>';
+            html += '<div class="propuesta-acciones"><button type="button" class="boton boton-primario boton-votar" data-propuesta-id="' + escapeHtml(String(id)) + '">Votar</button></div>';
         } else {
-            html += '<button type="button" class="boton boton-votado" disabled>Votado</button>';
+            html += '<div class="propuesta-acciones"><span class="boton boton-votado" aria-hidden="true">Votado</span><button type="button" class="boton boton-secundario boton-quitar-voto" data-propuesta-id="' + escapeHtml(String(id)) + '">Quitar voto</button></div>';
         }
         item.innerHTML = html;
         return item;
@@ -133,6 +133,7 @@
                         contenedor.appendChild(renderizarPropuesta(p, yaVotado));
                     });
                     enlazarBotonesVotar();
+                    enlazarBotonesQuitarVoto();
                 }
             })
             .catch(function () {
@@ -154,6 +155,47 @@
         });
     }
 
+    function enlazarBotonesQuitarVoto() {
+        contenedor.querySelectorAll('.boton-quitar-voto').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.getAttribute('data-propuesta-id');
+                if (!id) return;
+                quitarVoto(parseInt(id, 10), this);
+            });
+        });
+    }
+
+    function quitarVoto(propuestaId, boton) {
+        fetch(urlBase + '&recurso=quitar_voto', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propuesta_id: propuestaId })
+        })
+            .then(function (respuesta) { return respuesta.json(); })
+            .then(function (datos) {
+                if (datos.voto_quitado) {
+                    var card = boton && boton.closest ? boton.closest('.item-propuesta') : null;
+                    if (card) {
+                        var votosEl = card.querySelector('.votos-numero');
+                        var actual = votosEl ? parseInt(votosEl.textContent || '0', 10) : 0;
+                        if (votosEl) votosEl.textContent = String(Math.max(0, actual - 1));
+                        var acciones = card.querySelector('.propuesta-acciones');
+                        if (acciones) {
+                            acciones.innerHTML = '<button type="button" class="boton boton-primario boton-votar" data-propuesta-id="' + propuestaId + '">Votar</button>';
+                            enlazarBotonesVotar();
+                        }
+                    }
+                    if (window.Swal) window.Swal.fire(opcionesSwal({ title: 'Voto retirado', text: datos.mensaje || 'Ya puedes volver a votar si quieres.' }));
+                } else {
+                    if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'info', title: 'Wishlist', text: datos.mensaje || datos.error || 'No se pudo quitar el voto.' }));
+                }
+            })
+            .catch(function () {
+                if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar. Comprueba tu conexión.' }));
+            });
+    }
+
     function votar(propuestaId, boton) {
         fetch(urlBase + '&recurso=votar', {
             method: 'POST',
@@ -166,17 +208,17 @@
             })
             .then(function (datos) {
                 if (datos.voto) {
-                    // Actualizar tarjeta en caliente: votos + estado del botón
                     var card = boton && boton.closest ? boton.closest('.item-propuesta') : null;
                     if (card) {
                         var votosEl = card.querySelector('.votos-numero');
                         var actual = votosEl ? parseInt(votosEl.textContent || '0', 10) : 0;
                         if (votosEl) votosEl.textContent = String(actual + 1);
-                        boton.textContent = 'Votado';
-                        boton.classList.remove('boton-primario');
-                        boton.classList.add('boton-votado');
-                        boton.disabled = true;
-                        boton.removeAttribute('data-propuesta-id');
+                        var propuestaId = boton.getAttribute('data-propuesta-id') || '';
+                        var acciones = card.querySelector('.propuesta-acciones');
+                        if (acciones) {
+                            acciones.innerHTML = '<span class="boton boton-votado" aria-hidden="true">Votado</span><button type="button" class="boton boton-secundario boton-quitar-voto" data-propuesta-id="' + propuestaId + '">Quitar voto</button>';
+                            enlazarBotonesQuitarVoto();
+                        }
                     }
                 } else {
                     if (typeof window.Swal !== 'undefined') {

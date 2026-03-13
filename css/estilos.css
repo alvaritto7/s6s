@@ -171,12 +171,21 @@ body {
 .cabecera-dashboard {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0 1.5rem;
     min-height: 88px;
     box-sizing: border-box;
     border-bottom: 1px solid var(--gris-borde);
     flex-wrap: wrap;
+    gap: 1rem;
+}
+.cabecera-dashboard .logo-cabecera {
+    flex-shrink: 0;
+}
+.cabecera-dashboard .nav-dashboard {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
     gap: 1rem;
 }
 
@@ -210,13 +219,6 @@ body {
     text-decoration: none;
 }
 
-.nav-dashboard {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
 .nav-secciones-cabecera {
     display: flex;
     flex-wrap: wrap;
@@ -224,6 +226,14 @@ body {
     margin: 0;
     padding: 0;
     gap: 0.25rem 1rem;
+    flex: 1;
+    min-width: 0;
+    justify-content: space-evenly;
+    align-items: center;
+}
+.cabecera-dashboard .usuario-sesion,
+.cabecera-dashboard .form-logout {
+    flex-shrink: 0;
 }
 
 .nav-secciones-cabecera a {
@@ -896,22 +906,42 @@ body {
     color: var(--azul-electrico);
 }
 
-.item-propuesta-mia {
-    border-left-color: var(--azul-electrico);
-    box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.2);
+.propuesta-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
 }
-.item-propuesta-mia .titulo-propuesta { margin-top: 0.25rem; }
+.propuesta-acciones .boton-votado {
+    cursor: default;
+}
+
+.item-propuesta-mia {
+    background: linear-gradient(135deg, rgba(0, 163, 255, 0.12) 0%, rgba(0, 163, 255, 0.04) 100%);
+    border-left: 6px solid var(--azul-electrico);
+    box-shadow: 0 0 0 1px rgba(0, 163, 255, 0.35), 0 4px 12px rgba(0, 163, 255, 0.15);
+}
+.item-propuesta-mia .titulo-propuesta { margin-top: 0.5rem; }
 .badge-mi-propuesta {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     background: var(--azul-electrico);
     color: var(--blanco);
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.35rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 163, 255, 0.4);
+}
+.badge-mi-propuesta::before {
+    content: '★';
+    font-size: 0.75em;
+    opacity: 0.95;
 }
 
 /* Badges de estado (workflow) */

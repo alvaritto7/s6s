@@ -207,13 +207,14 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 - **“Nueva propuesta”:** formulario con **Título** (obligatorio), **Descripción** (opcional) y botón **“Crear propuesta”**.
 - **Lista de propuestas:** cada una muestra título, descripción (si tiene), quién la propuso, fecha, **número de votos** y, según tu caso:
   - Un botón **“Votar”** si todavía no has votado esa propuesta.
-  - Un botón desactivado **“Votado”** si ya la has votado (así ves claramente que ya has participado en esa propuesta).
+  - El texto **“Votado”** y un botón **“Quitar voto”** si ya has votado (así puedes retirar tu voto si cambias de opinión).
   - Si la propuesta es **tuya**, verás la etiqueta **“Tu propuesta”** en azul sobre la tarjeta para identificarla rápido.
 
 **Qué puedes hacer:**
 
 1. **Crear propuesta:** Rellenar al menos el título, opcionalmente la descripción, y pulsar **“Crear propuesta”**. Verás un mensaje de confirmación.
-2. **Votar:** Pulsar **“Votar”** en una propuesta. En cuanto votas, **sin recargar la página**, el número de votos sube en pantalla y el botón cambia a **“Votado”** en color destacado y queda desactivado para que veas que ya no puedes votar otra vez.
+2. **Votar:** Pulsar **“Votar”** en una propuesta. Sin recargar la página, el número de votos sube y aparece **“Votado”** junto al botón **“Quitar voto”**.
+3. **Quitar voto:** Si ya has votado, puedes pulsar **“Quitar voto”** para retirar tu voto. El contador baja en uno y vuelve a mostrarse el botón **“Votar”** por si quieres volver a votar más tarde.
 
 Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si falla la conexión, aparecerá un aviso de error.
 
@@ -347,4 +348,5 @@ Si ves un mensaje de error de conexión, comprueba que tienes internet o que el 
 | (fecha de hoy) | Añadida nota al inicio: este es el manual de **uso**; para documentación técnica del código ver **MANUAL_TECNICO.md**. |
 | (fecha de hoy) | Inventario: tarjetas de productos en **stock crítico** con aviso “Stock bajo”, borde ligeramente anaranjado y barra de color rojo/naranja que indica visualmente lo cerca que está el stock del umbral crítico. Informes: informes de Inventario y Pedidos en HTML con cabecera corporativa (logo arriba a la derecha y línea azul), valor económico total del inventario y resumen mensual de consumo por departamento; se pueden imprimir o guardar como PDF desde el navegador. Wishlist: al votar, el botón pasa a **“Votado”** sin recargar la página. SweetAlert2: cuadros de diálogo de confirmación y éxito usando el isotipo de s6s como icono. |
 | (fecha de hoy) | **Mi cuenta:** nueva página accesible desde el menú para todos los usuarios. Permite ver nombre, email y rol; editar el nombre (Guardar nombre) y cambiar la contraseña (contraseña actual + nueva + repetición). Wishlist: las propuestas creadas por el usuario actual muestran la etiqueta **"Tu propuesta"** en azul para identificarlas. |
+| (fecha de hoy) | **Wishlist:** añadida la opción **"Quitar voto"**. Si ya has votado una propuesta, aparece el botón "Quitar voto" junto a "Votado"; al pulsarlo se retira tu voto (el contador baja y vuelve a mostrarse "Votar") sin recargar la página. |
 

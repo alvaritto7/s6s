@@ -688,6 +688,14 @@ class BaseDeDatos
         return true;
     }
 
+    /** Elimina el voto del usuario en la propuesta. Devuelve true si se eliminó. */
+    public function eliminarVoto(int $propuestaId, int $usuarioId): bool
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM votos WHERE propuesta_id = ? AND usuario_id = ?');
+        $stmt->execute([$propuestaId, $usuarioId]);
+        return $stmt->rowCount() > 0;
+    }
+
     public function obtenerPropuestasOrdenadasPorVotos(): array
     {
         $propuestas = $this->query(

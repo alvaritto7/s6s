@@ -49,6 +49,9 @@ class Api
             case 'votar':
                 $this->procesarVoto();
                 break;
+            case 'quitar_voto':
+                $this->procesarQuitarVoto();
+                break;
             case 'crear_pedido':
                 $this->procesarCrearPedido();
                 break;
@@ -351,6 +354,24 @@ class Api
         }
         $ok = $this->bd->insertarVoto($propuestaId, $usuarioId);
         $this->responderJson(['voto' => $ok, 'mensaje' => $ok ? 'Voto registrado' : 'Error al registrar']);
+    }
+
+    /** Wishlist: quitar voto (POST). Solo si el usuario había votado. */
+    private function procesarQuitarVoto(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->responderJson(['error' => 'Método no permitido'], 405);
+            return;
+        }
+        $input = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $propuestaId = (int) ($input['propuesta_id'] ?? $_POST['propuesta_id'] ?? 0);
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        if ($propuestaId < 1 || $usuarioId < 1) {
+            $this->responderJson(['error' => 'Datos insuficientes', 'voto_quitado' => false], 400);
+            return;
+        }
+        $ok = $this->bd->eliminarVoto($propuestaId, $usuarioId);
+        $this->responderJson(['voto_quitado' => $ok, 'mensaje' => $ok ? 'Voto retirado' : 'No tenías voto en esta propuesta']);
     }
 
     /** Crea una solicitud (pedido). Comprueba stock disponible y bloquea. */
