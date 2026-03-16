@@ -45,9 +45,10 @@
         var imagen = producto.imagen || '';
         var id = producto.id || '';
 
-        var sinStock = stock === 0;
-        // Solo se considera \"stock bajo\" (naranja) si queda algo (>0). Si es 0, será \"Agotado\" (rojo) con su propio borde.
-        var esBajo = !sinStock && umbral > 0 && stock <= umbral;
+        var sinStock = disponible === 0;
+        // Solo se considera "stock bajo" (naranja) si queda algo disponible (>0).
+        // Si el disponible es 0, será "Agotado" (rojo) con su propio borde.
+        var esBajo = !sinStock && umbral > 0 && disponible <= umbral;
         var claseStock = '';
         if (sinStock) {
             claseStock = 'tarjeta-agotado';
@@ -71,7 +72,7 @@
         if (descripcion) {
             html += '<p class="tarjeta-descripcion">' + escapeHtml(descripcion) + '</p>';
         }
-        html += '<p class="tarjeta-stock">Stock: <strong>' + stock + '</strong> · Disponible: <strong>' + disponible + '</strong>';
+        html += '<p class="tarjeta-stock">Disponible: <strong>' + disponible + '</strong>';
         if (esBajo) {
             html += ' <span class="tarjeta-alerta">Stock bajo</span>';
         }

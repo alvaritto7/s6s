@@ -57,7 +57,7 @@
     var puedeStaff = document.body && document.body.getAttribute('data-puede-staff') === '1';
 
     function estadoPropuestaLabel(estado) {
-        var map = { en_estudio: 'En estudio', aceptada: 'Aceptada', descartada: 'Descartada' };
+        var map = { en_estudio: 'En estudio', aceptada: 'Aceptada', descartada: 'Descartada', archivada: 'Archivada' };
         return map[estado] || 'En estudio';
     }
 
@@ -70,12 +70,13 @@
         var fecha = propuesta.fecha_creacion || '';
         var esMia = !!propuesta.es_mia;
         var estado = (propuesta.estado || 'en_estudio').replace(/[^a-z_]/g, '');
-        if (estado !== 'en_estudio' && estado !== 'aceptada' && estado !== 'descartada') estado = 'en_estudio';
+        if (['en_estudio', 'aceptada', 'descartada', 'archivada'].indexOf(estado) === -1) estado = 'en_estudio';
 
         var item = document.createElement('article');
         item.className = 'item-propuesta' + (esMia ? ' item-propuesta-mia' : '');
         item.setAttribute('role', 'listitem');
         item.setAttribute('data-id', String(id));
+        item.setAttribute('data-estado', estado);
 
         var html = '';
         if (esMia) html += '<span class="badge-mi-propuesta">Tu propuesta</span>';
@@ -98,7 +99,7 @@
             html += '<div class="propuesta-acciones"><span class="boton boton-votado" aria-hidden="true">Votado</span><button type="button" class="boton boton-secundario boton-quitar-voto" data-propuesta-id="' + escapeHtml(String(id)) + '">Quitar voto</button></div>';
         }
         if (puedeStaff) {
-            html += '<div class="propuesta-cambiar-estado"><label for="estado-' + id + '">Estado:</label><select id="estado-' + id + '" class="select-estado-propuesta" data-propuesta-id="' + escapeHtml(String(id)) + '"><option value="en_estudio"' + (estado === 'en_estudio' ? ' selected' : '') + '>En estudio</option><option value="aceptada"' + (estado === 'aceptada' ? ' selected' : '') + '>Aceptada</option><option value="descartada"' + (estado === 'descartada' ? ' selected' : '') + '>Descartada</option></select><button type="button" class="boton boton-secundario boton-aplicar-estado" data-propuesta-id="' + escapeHtml(String(id)) + '">Actualizar</button></div>';
+            html += '<div class="propuesta-cambiar-estado"><label for="estado-' + id + '">Estado:</label><select id="estado-' + id + '" class="select-estado-propuesta" data-propuesta-id="' + escapeHtml(String(id)) + '"><option value="en_estudio"' + (estado === 'en_estudio' ? ' selected' : '') + '>En estudio</option><option value="aceptada"' + (estado === 'aceptada' ? ' selected' : '') + '>Aceptada</option><option value="descartada"' + (estado === 'descartada' ? ' selected' : '') + '>Descartada</option><option value="archivada"' + (estado === 'archivada' ? ' selected' : '') + '>Archivada</option></select><button type="button" class="boton boton-secundario boton-aplicar-estado" data-propuesta-id="' + escapeHtml(String(id)) + '">Actualizar</button></div>';
         }
         html += '<div class="propuesta-comentarios" data-propuesta-id="' + escapeHtml(String(id)) + '"><h4>Comentarios</h4><ul class="comentarios-lista"></ul><form class="form-nuevo-comentario" data-propuesta-id="' + escapeHtml(String(id)) + '"><textarea name="texto" placeholder="Escribe un comentario..." maxlength="500"></textarea><button type="submit" class="boton boton-primario">Enviar comentario</button></form></div>';
         item.innerHTML = html;
@@ -389,10 +390,16 @@
                     .then(function (r) { return r.json(); })
                     .then(function (datos) {
                         if (datos.actualizado && card) {
-                            var badge = card.querySelector('.badge-estado-propuesta');
-                            if (badge) {
-                                badge.className = 'badge-estado-propuesta badge-estado-' + estado;
-                                badge.textContent = estadoPropuestaLabel(estado);
+                            if (estado === 'archivada') {
+                                // Archivar = quitar de la lista visible
+                                card.remove();
+                            } else {
+                                var badge = card.querySelector('.badge-estado-propuesta');
+                                if (badge) {
+                                    badge.className = 'badge-estado-propuesta badge-estado-' + estado;
+                                    badge.textContent = estadoPropuestaLabel(estado);
+                                }
+                                card.setAttribute('data-estado', estado);
                             }
                             if (window.Swal) window.Swal.fire(opcionesSwal({ title: 'Estado actualizado', text: '' }));
                         } else if (window.Swal) window.Swal.fire(opcionesSwal({ icon: 'error', title: 'Error', text: datos.error || 'No se pudo actualizar.' }));

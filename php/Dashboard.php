@@ -17,11 +17,11 @@ class Dashboard
         $bd = new BaseDeDatos();
         $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
         $rolUsuario    = $_SESSION['usuario_rol'] ?? ROL_EMPLEADO;
-        $alertasStock  = $bd->obtenerProductosBajoUmbral();
         $puedeAdmin    = ($rolUsuario === ROL_ADMINISTRADOR || $rolUsuario === ROL_STAFF);
+        $alertasStock  = $puedeAdmin ? $bd->obtenerProductosBajoUmbral() : [];
 
         $bloqueAlertas = '';
-        if (!empty($alertasStock)) {
+        if ($puedeAdmin && !empty($alertasStock)) {
             $items = '';
             foreach ($alertasStock as $a) {
                 $stock = (int) ($a['stock'] ?? 0);

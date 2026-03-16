@@ -147,7 +147,7 @@ Si falta algo o el email ya está usado, verás un **mensaje en rojo**. Si todo 
 - **Título:** “Inventario” y un texto que dice que puedes filtrar por categoría.
 - **Buscar por nombre:** Un cuadro de búsqueda para escribir y filtrar productos por nombre.
 - **Categoría:** Botones para filtrar: **Todas**, **IT**, **Mobiliario**, **Consumibles** (las categorías pueden variar).
-- **Lista de productos:** Tarjetas con cada producto: nombre, descripción, stock disponible y un botón **“Solicitar”** (si hay stock). Si el stock está por debajo del **umbral crítico**, la tarjeta se resalta visualmente (borde anaranjado, texto “Stock bajo” y una **barra de color rojo/naranja** que indica de forma visual lo cerca que está de agotarse).
+- **Lista de productos:** Tarjetas con cada producto: nombre, descripción, **unidades disponibles** y un botón **“Solicitar”** (si hay unidades disponibles). Si el stock está por debajo del **umbral crítico**, la tarjeta se resalta visualmente (borde anaranjado, texto “Stock bajo” y una **barra de color rojo/naranja** que indica de forma visual lo cerca que está de agotarse).
 
 **Qué puedes hacer:**
 
@@ -176,8 +176,9 @@ Si no hay conexión o falla algo, la página mostrará un mensaje de error (por 
 
 - **Título** y texto explicando los estados (Pendiente → En Revisión → Aprobado/Denegado → Entregado).
 - Si eres **staff o administrador:**
-  - **“Pendientes (pasar a revisión)”:** lista de solicitudes en estado *pendiente*. Cada línea muestra **quién la pidió** (nombre del solicitante), producto, unidades, **prioridad** (con color: Alta en rojo, Normal en azul, Baja en verde) y botón **“Pasar a revisión”**.
-  - **“En revisión (staff)”:** lista de solicitudes *en revisión* con el mismo formato (solicitante, producto, unidades, prioridad) y botones **“Aprobar”**, **“Denegar”** y **“Marcar entregado”**.
+- **“Pendientes (pasar a revisión)”:** lista de solicitudes en estado *pendiente*. Cada línea muestra **quién la pidió** (nombre del solicitante), producto, unidades, **prioridad** (con color: Alta en rojo, Normal en azul, Baja en verde), **motivo de la solicitud** (si lo han indicado) y botón **“Pasar a revisión”**.
+  - **“En revisión (staff)”:** lista de solicitudes *en revisión* con el mismo formato (solicitante, producto, unidades, prioridad y, si existe, el **motivo** escrito por el empleado) y botones **“Aprobar”** y **“Denegar”**.
+  - **“Aprobados (marcar entregado)”:** lista de solicitudes en estado *aprobado*. Cada línea muestra solicitante, producto, unidades, prioridad, motivo (si existe) y un botón **“Marcar entregado”**, que es el que se usa cuando el material ya se ha entregado físicamente al empleado.
 - **“Nueva solicitud”:** formulario para pedir material desde esta página (producto, unidades, prioridad, motivo) y botón **“Enviar solicitud”**.
 - **“Mis solicitudes”:** lista de **tus** solicitudes (cada línea empieza por **“Tú”**, luego producto, unidades, prioridad con color, motivo, estado y fecha). Filtros por estado: **Todas**, **Pendiente**, **En revisión**, **Aprobado**, **Denegado**, **Entregado**.
 
@@ -199,7 +200,7 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 
 ## 9. Wishlist
 
-**Qué es:** Un **tablón de propuestas** de compra (“me gustaría que compraran esto”). Puedes **crear** propuestas, **votar** las de otros, **comentar** en cualquier propuesta y ver en **qué estado** está cada una (En estudio, Aceptada, Descartada). Las propuestas se ordenan por número de votos.
+**Qué es:** Un **tablón de propuestas** de compra (“me gustaría que compraran esto”). Puedes **crear** propuestas, **votar** las de otros, **comentar** en cualquier propuesta y ver en **qué estado** está cada una (En estudio, Aceptada, Descartada, Archivada). Las propuestas se ordenan por número de votos.
 
 **Quién puede usarlo:** Empleado, staff y administrador (todos).
 
@@ -208,7 +209,7 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 - **Título** y texto explicando que son propuestas de compra y que puedes votar.
 - **“Nueva propuesta”:** formulario con **Título** (obligatorio), **Descripción** (opcional) y botón **“Crear propuesta”**.
 - **Lista de propuestas:** cada una muestra:
-  - **Estado:** una etiqueta que indica si la propuesta está **En estudio**, **Aceptada** o **Descartada** (así sabes si ya se ha decidido y evitas duplicar solicitudes).
+  - **Estado:** una etiqueta que indica si la propuesta está **En estudio**, **Aceptada**, **Descartada** o **Archivada**. El estado **Archivada** se usa normalmente por staff/administración cuando la propuesta ya se ha llevado a cabo (por ejemplo, ya se ha comprado y añadido al inventario) o cuando se quiere sacarla de la lista sin perderla del todo.
   - Título, descripción (si tiene), quién la propuso, fecha y **número de votos**.
   - Según tu caso: botón **“Votar”** si no has votado, o **“Votado”** y **“Quitar voto”** si ya has votado.
   - Si la propuesta es **tuya**, la etiqueta **“Tu propuesta”** en azul.
@@ -221,7 +222,7 @@ Si falla la conexión, verás un mensaje de error indicando que compruebes la co
 2. **Votar / Quitar voto:** Pulsar **“Votar”** o **“Quitar voto”**; el contador y los botones se actualizan sin recargar la página.
 3. **Comentar:** Escribir en el cuadro de comentarios y pulsar **“Enviar comentario”**. Verás tu comentario con tu nombre.
 4. **Editar tu comentario:** En un comentario que hayas escrito tú, pulsar **“Editar”**, cambiar el texto y **“Guardar”** (o **“Cancelar”** para no guardar).
-5. **Cambiar estado (solo staff/administrador):** Elegir el nuevo estado en el desplegable y pulsar **“Actualizar”**. La etiqueta de estado de la propuesta se actualiza al momento.
+5. **Cambiar estado (solo staff/administrador):** Elegir el nuevo estado en el desplegable (En estudio / Aceptada / Descartada / Archivada) y pulsar **“Actualizar”**. La etiqueta de estado de la propuesta se actualiza al momento; si se marca **Archivada**, la propuesta desaparece de la lista principal (deja de “estorbar”), pero sigue existiendo en la base de datos para referencia histórica.
 
 Si no hay propuestas, verás un mensaje tipo “No hay propuestas aún”. Si falla la conexión, aparecerá un aviso de error.
 

@@ -18,10 +18,12 @@ class Peticiones
 
         $misPeticiones = $bd->obtenerPedidosPorUsuario($usuarioId);
         $pendientesRevision = [];
+        $aprobados = [];
         $pendientesPendientes = [];
         if ($rol === ROL_ADMINISTRADOR || $rol === ROL_STAFF) {
             $pendientesRevision = $bd->obtenerPedidosPorEstado(BaseDeDatos::ESTADO_EN_REVISION);
             $pendientesPendientes = $bd->obtenerPedidosPorEstado(BaseDeDatos::ESTADO_PENDIENTE);
+            $aprobados = $bd->obtenerPedidosPorEstado(BaseDeDatos::ESTADO_APROBADO);
         }
 
         $nombresProductos = [];
@@ -56,7 +58,9 @@ class Peticiones
                 $solicitante = $nombresUsuarios[$uid] ?? 'Usuario #' . $uid;
                 $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
                 $estadoSlug = htmlspecialchars(str_replace('_', '-', $p['estado'] ?? ''));
-                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado" data-estado="en_revision">Pasar a revisión</button></div></li>';
+                $motivo = trim((string) ($p['motivo'] ?? ''));
+                $textoMotivo = $motivo !== '' ? ' · Motivo: ' . htmlspecialchars($motivo) : '';
+                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . $textoMotivo . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado" data-estado="en_revision">Pasar a revisión</button></div></li>';
             }
             $bloqueStaffPendientes = '<section class="bloque-peticiones" aria-labelledby="titulo-pendientes"><h2 id="titulo-pendientes">Pendientes (pasar a revisión)</h2><ul class="lista-peticiones" id="lista-pendientes">' . $items . '</ul></section>';
         }
@@ -70,9 +74,27 @@ class Peticiones
                 $solicitante = $nombresUsuarios[$uid] ?? 'Usuario #' . $uid;
                 $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
                 $estadoSlug = htmlspecialchars(str_replace('_', '-', $p['estado'] ?? ''));
-                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado boton-aprobar" data-estado="aprobado">Aprobar</button><button type="button" class="boton boton-secundario boton-estado boton-denegar" data-estado="denegado">Denegar</button><button type="button" class="boton boton-estado boton-entregado" data-estado="entregado">Marcar entregado</button></div></li>';
+                $motivo = trim((string) ($p['motivo'] ?? ''));
+                $textoMotivo = $motivo !== '' ? ' · Motivo: ' . htmlspecialchars($motivo) : '';
+                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . $textoMotivo . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-primario boton-estado boton-aprobar" data-estado="aprobado">Aprobar</button><button type="button" class="boton boton-secundario boton-estado boton-denegar" data-estado="denegado">Denegar</button></div></li>';
             }
             $bloqueStaffRevision = '<section class="bloque-peticiones" aria-labelledby="titulo-revision"><h2 id="titulo-revision">En revisión (staff)</h2><ul class="lista-peticiones" id="lista-revision">' . $items . '</ul></section>';
+        }
+
+        $bloqueStaffAprobados = '';
+        if (!empty($aprobados)) {
+            $items = '';
+            foreach ($aprobados as $p) {
+                $pid = (int) ($p['id'] ?? 0);
+                $uid = (int) ($p['usuario_id'] ?? 0);
+                $solicitante = $nombresUsuarios[$uid] ?? 'Usuario #' . $uid;
+                $nombreProd = $nombresProductos[(int) ($p['producto_id'] ?? 0)] ?? 'Producto #' . (int) ($p['producto_id'] ?? 0);
+                $estadoSlug = htmlspecialchars(str_replace('_', '-', $p['estado'] ?? ''));
+                $motivo = trim((string) ($p['motivo'] ?? ''));
+                $textoMotivo = $motivo !== '' ? ' · Motivo: ' . htmlspecialchars($motivo) : '';
+                $items .= '<li class="item-peticion" data-pedido-id="' . $pid . '"><span class="peticion-solicitante">' . htmlspecialchars($solicitante) . '</span> · ' . htmlspecialchars($nombreProd) . ' · Unidades: ' . (int) ($p['unidades'] ?? 0) . ' · ' . $prioridadHtml($p) . $textoMotivo . ' · <span class="estado badge badge-' . $estadoSlug . '">' . htmlspecialchars($p['estado'] ?? '') . '</span><div class="peticion-acciones"><button type="button" class="boton boton-estado boton-entregado" data-estado="entregado">Marcar entregado</button></div></li>';
+            }
+            $bloqueStaffAprobados = '<section class="bloque-peticiones" aria-labelledby="titulo-aprobados"><h2 id="titulo-aprobados">Aprobados (marcar entregado)</h2><ul class="lista-peticiones" id="lista-aprobados">' . $items . '</ul></section>';
         }
 
         $listaMisPeticiones = '';
@@ -106,6 +128,7 @@ class Peticiones
             'ROL_USUARIO' => htmlspecialchars($rol),
             'BLOQUE_STAFF_PENDIENTES' => $bloqueStaffPendientes,
             'BLOQUE_STAFF_REVISION' => $bloqueStaffRevision,
+            'BLOQUE_STAFF_APROBADOS' => $bloqueStaffAprobados,
             'LISTA_MIS_PETICIONES' => $listaMisPeticiones,
             'FOOTER' => $footer,
         ]);

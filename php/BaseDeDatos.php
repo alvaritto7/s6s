@@ -702,11 +702,11 @@ class BaseDeDatos
         return (int) $this->pdo->lastInsertId();
     }
 
-    /** Actualiza el estado de una propuesta (solo staff/admin). Valores: en_estudio, aceptada, descartada. */
+    /** Actualiza el estado de una propuesta (solo staff/admin). Valores: en_estudio, aceptada, descartada, archivada. */
     public function actualizarEstadoPropuesta(int $propuestaId, string $estado): bool
     {
         $estado = preg_replace('/[^a-z_]/', '', $estado);
-        if (!in_array($estado, ['en_estudio', 'aceptada', 'descartada'], true)) {
+        if (!in_array($estado, ['en_estudio', 'aceptada', 'descartada', 'archivada'], true)) {
             return false;
         }
         return $this->executeUpdate('UPDATE propuestas_wishlist SET estado = ? WHERE id = ?', [$estado, $propuestaId]);

@@ -175,6 +175,7 @@
 
     document.getElementById('lista-revision') && document.getElementById('lista-revision').addEventListener('click', onBotonEstadoClick);
     document.getElementById('lista-pendientes') && document.getElementById('lista-pendientes').addEventListener('click', onBotonEstadoClick);
+    document.getElementById('lista-aprobados') && document.getElementById('lista-aprobados').addEventListener('click', onBotonEstadoClick);
 
     /* Filtro por estado en Mis solicitudes */
     var contenedorMis = document.getElementById('contenedor-mis-peticiones');
