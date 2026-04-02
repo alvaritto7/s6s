@@ -1,0 +1,43 @@
+/**
+ * librerias-externas.css — Sobrescrituras para librerías de terceros (SweetAlert2).
+ * Tema oscuro acorde a la identidad s6s.
+ */
+
+.swal2-popup {
+    background: var(--antracita) !important;
+    border: 1px solid var(--gris-borde);
+    color: var(--blanco);
+}
+
+.swal2-image {
+    height: 60px !important;
+    width: auto !important;
+    object-fit: contain;
+    margin-bottom: 0.75rem;
+}
+
+.swal2-title {
+    color: var(--blanco) !important;
+}
+
+.swal2-html-container {
+    color: var(--gris-texto) !important;
+}
+
+.swal2-styled.swal2-confirm {
+    background-color: var(--azul-electrico) !important;
+    color: var(--blanco) !important;
+}
+
+.swal2-styled.swal2-cancel {
+    background-color: transparent !important;
+    color: var(--azul-electrico) !important;
+    border: 1px solid var(--azul-electrico) !important;
+}
+
+.swal2-icon.swal2-warning,
+.swal2-icon.swal2-error,
+.swal2-icon.swal2-success,
+.swal2-icon.swal2-info {
+    border-color: var(--gris-texto) !important;
+}

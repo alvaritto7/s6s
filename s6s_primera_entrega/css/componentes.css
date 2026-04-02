@@ -1,0 +1,126 @@
+/**
+ * componentes.css — Botones, mensajes, badges genéricos, tarjeta base, form-logout.
+ */
+
+/* --- Mensajes (error/éxito) --- */
+.mensaje-error {
+    margin: 0 0 0.5rem 0;
+    padding: 0.75rem;
+    background: rgba(200, 80, 80, 0.2);
+    border: 1px solid #c05050;
+    border-radius: 6px;
+    color: #ffb0b0;
+    font-size: 0.9rem;
+}
+
+.mensaje-exito {
+    margin: 0 0 0.5rem 0;
+    padding: 0.75rem;
+    background: rgba(34, 170, 34, 0.2);
+    border: 1px solid #2a8a2a;
+    border-radius: 6px;
+    color: #90ee90;
+    font-size: 0.9rem;
+}
+
+/* --- Botones --- */
+.boton {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: filter 0.15s ease;
+}
+
+.boton:hover {
+    filter: brightness(1.1);
+}
+
+.boton-primario {
+    background-color: var(--azul-electrico);
+    color: var(--blanco);
+    margin-top: 0.5rem;
+}
+
+.boton-secundario {
+    background-color: transparent;
+    color: var(--azul-electrico);
+    border: 1px solid var(--azul-electrico);
+}
+
+/* Grupos de botones: mismo tamaño (p. ej. Aprobar, Denegar, Marcar entregado) */
+.peticion-acciones .boton {
+    width: 185px;
+    min-width: 185px;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    margin-top: 0;
+    box-sizing: border-box;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-botones .boton {
+    min-width: 150px;
+}
+.form-producto-botones .boton {
+    width: 150px;
+    min-width: 150px;
+    box-sizing: border-box;
+}
+.propuesta-acciones .boton,
+.propuesta-acciones .boton-votado {
+    min-width: 120px;
+}
+.tabla-productos .boton {
+    min-width: 110px;
+}
+.admin-informes-botones .boton,
+.admin-informes-botones a.boton {
+    min-width: 150px;
+}
+.filtro-estado-peticiones .boton-filtro-estado {
+    min-width: 100px;
+}
+.filtros-botones .boton-filtro {
+    min-width: 100px;
+}
+
+/* Tarjeta genérica */
+.tarjeta {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Form logout (nav) */
+.form-logout {
+    display: inline-block;
+    margin: 0;
+}
+.form-logout button {
+    cursor: pointer;
+    font: inherit;
+}
+
+/* Badges de estado (workflow) */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-pendiente { background: #665500; color: #ffd700; }
+.badge-en-revision { background: rgba(0, 163, 255, 0.3); color: var(--azul-electrico); }
+.badge-aprobado { background: rgba(34, 170, 34, 0.3); color: #7fff7f; }
+.badge-denegado { background: rgba(170, 34, 34, 0.3); color: #ff8080; }
+.badge-entregado { background: var(--gris-borde); color: var(--gris-texto); }

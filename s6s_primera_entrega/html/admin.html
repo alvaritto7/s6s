@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración — s6s</title>
+    <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <link rel="stylesheet" href="css/cabecera-nav.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/librerias-externas.css">
+    <link rel="stylesheet" href="css/otros.css">
+</head>
+<body class="pagina-dashboard" data-isotipo="{{ASSET_ISOTIPO}}">
+    <header class="cabecera-dashboard">
+        <div class="logo-cabecera">
+            <a href="index.php?accion={{ACCION_DASHBOARD}}" class="logo-cabecera-enlace" title="Ir al inicio">
+                <img src="{{ASSET_ISOTIPO}}" alt="s6s Inicio" class="logo-cabecera-isotipo">
+            </a>
+        </div>
+        <button type="button" class="btn-menu-mobile" id="btn-menu-mobile" aria-expanded="false" aria-controls="nav-principal" aria-label="Abrir menú">Menú</button>
+        <nav class="nav-dashboard" id="nav-principal">
+            <ul class="nav-secciones-cabecera" aria-label="Navegación rápida">
+                <li><a href="index.php?accion=inventario">Inventario</a></li>
+                <li><a href="index.php?accion=peticiones">Peticiones</a></li>
+                <li><a href="index.php?accion=admin" class="activo">Administración</a></li>
+            </ul>
+            <span class="usuario-sesion">
+                <img src="{{ASSET_ISOTIPO}}" alt="" class="avatar-isotipo" aria-hidden="true">
+                {{NOMBRE_USUARIO}} <em>({{ROL_USUARIO}})</em>
+            </span>
+            <form method="post" action="index.php" class="form-logout">
+                <input type="hidden" name="accion" value="logout">
+                <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
+            </form>
+        </nav>
+    </header>
+    <main class="contenido-dashboard">
+        <h1>Administración</h1>
+        <p class="subtitulo-pagina">Resumen para staff y administrador.</p>
+
+        <section class="admin-avisos" aria-labelledby="titulo-avisos">
+            <h2 id="titulo-avisos">Qué requiere tu atención</h2>
+            {{BLOQUE_AVISOS_DASHBOARD}}
+        </section>
+
+        <section class="admin-resumen" aria-label="Resumen">
+            <div class="resumen-cards">
+                <div class="resumen-card">
+                    <span class="resumen-numero">{{TOTAL_PRODUCTOS}}</span>
+                    <span class="resumen-etiqueta">Productos activos</span>
+                </div>
+                <div class="resumen-card">
+                    <span class="resumen-numero">{{TOTAL_PEDIDOS}}</span>
+                    <span class="resumen-etiqueta">Total pedidos</span>
+                </div>
+                <div class="resumen-card resumen-card-alerta">
+                    <span class="resumen-numero">{{TOTAL_ALERTAS}}</span>
+                    <span class="resumen-etiqueta">Stock bajo umbral</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-graficos" aria-labelledby="titulo-graficos">
+            <h2 id="titulo-graficos">Estadísticas</h2>
+            <p class="color-gris">{{TEXTO_ESTADISTICAS_PLACEHOLDER}}</p>
+            <div class="admin-panel-alertas" aria-labelledby="titulo-panel-alertas">
+                <h3 id="titulo-panel-alertas">Productos en alerta</h3>
+                {{BLOQUE_ALERTAS_ADMIN}}
+            </div>
+        </section>
+
+        {{BLOQUE_INFORMES_PDF}}
+        {{BLOQUE_GESTION_PRODUCTOS}}
+    </main>
+    {{FOOTER}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/nav.js"></script>
+</body>
+</html>

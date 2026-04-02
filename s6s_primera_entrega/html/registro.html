@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro — s6s</title>
+    <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/librerias-externas.css">
+    <link rel="stylesheet" href="css/otros.css">
+</head>
+<body class="pagina-login">
+    <main class="contenedor-login">
+        <div class="logo-login" aria-hidden="true">
+            <img src="{{ASSET_LOGOTIPO}}" alt="s6s Intelligent Supply System" class="logo-completo">
+        </div>
+        <p class="texto-rol-registro">Registro como <strong>empleado</strong>. Podrás usar Inventario y Peticiones.</p>
+        <form class="formulario-login formulario-registro" action="index.php" method="post" id="formulario-registro" novalidate>
+            <input type="hidden" name="accion" value="registro">
+            {{MENSAJE_ERROR}}
+            {{MENSAJE_EXITO}}
+            <label for="nombre">Nombre y Apellidos</label>
+            <input type="text" id="nombre" name="nombre" autocomplete="name" required value="{{VALOR_NOMBRE}}">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" required value="{{VALOR_EMAIL}}">
+            <label for="password">Contraseña (mín. 6 caracteres)</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required minlength="6">
+            <label for="password2">Repetir contraseña</label>
+            <input type="password" id="password2" name="password2" autocomplete="new-password" required minlength="6">
+            <button type="submit" class="boton boton-primario">Crear cuenta</button>
+        </form>
+        <p class="enlace-login-registro"><a href="index.php?accion=login">¿Ya tienes cuenta? Iniciar sesión</a></p>
+    </main>
+    {{FOOTER}}
+    <script src="js/registro.js"></script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+/**
+ * cabecera-nav.css — Cabecera sticky, navegación, menú móvil.
+ */
+
+.pagina-dashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.cabecera-dashboard {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    min-height: 88px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--gris-borde);
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--antracita);
+    transition: min-height 0.25s ease, padding 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cabecera-dashboard.cabecera-reducida {
+    min-height: 56px;
+    padding: 0 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.cabecera-dashboard.cabecera-reducida .logo-cabecera-isotipo {
+    height: 44px;
+    width: 44px;
+    max-height: 44px;
+}
+
+.cabecera-dashboard.cabecera-reducida .nav-secciones-cabecera a {
+    font-size: 0.85rem;
+}
+
+.cabecera-dashboard.cabecera-reducida .usuario-sesion {
+    font-size: 0.85rem;
+}
+
+.cabecera-dashboard.cabecera-reducida .form-logout .boton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.cabecera-dashboard.cabecera-reducida .avatar-isotipo {
+    height: 24px;
+    width: 24px;
+}
+
+.cabecera-dashboard .logo-cabecera {
+    flex-shrink: 0;
+}
+
+.cabecera-dashboard .nav-dashboard {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-cabecera,
+.logo-cabecera-enlace {
+    background-color: transparent;
+}
+
+.logo-cabecera .logo-completo,
+.logo-cabecera-enlace .logo-completo {
+    max-height: 36px;
+    width: auto;
+}
+
+.logo-cabecera-isotipo {
+    display: block;
+    height: 72px;
+    width: 72px;
+    max-height: 72px;
+    object-fit: contain;
+    transition: transform 0.2s ease, height 0.25s ease, width 0.25s ease, max-height 0.25s ease;
+}
+
+.logo-cabecera-enlace:hover .logo-cabecera-isotipo {
+    transform: scale(1.08);
+}
+
+.logo-cabecera-enlace {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.nav-secciones-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem 1rem;
+    flex: 1;
+    min-width: 0;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.cabecera-dashboard .usuario-sesion,
+.cabecera-dashboard .form-logout {
+    flex-shrink: 0;
+}
+
+.nav-secciones-cabecera a {
+    color: var(--gris-texto);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.nav-secciones-cabecera a:hover {
+    color: var(--azul-electrico);
+}
+
+.nav-secciones-cabecera a.activo {
+    color: var(--azul-electrico);
+    font-weight: 600;
+    border-bottom: 2px solid var(--azul-electrico);
+    padding-bottom: 2px;
+}
+
+.spinner-isotipo-wrap {
+    display: inline-block;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.spinner-isotipo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    animation: spinner-giro 0.9s linear infinite;
+}
+
+@keyframes spinner-giro {
+    to { transform: rotate(360deg); }
+}
+
+.estado-carga .estado-carga-texto {
+    vertical-align: middle;
+}
+
+.usuario-sesion {
+    font-size: 0.9rem;
+    color: var(--gris-texto);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.avatar-isotipo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: height 0.25s ease, width 0.25s ease;
+}
+
+.usuario-sesion em {
+    font-style: normal;
+    color: var(--azul-electrico);
+}
+
+.contenido-dashboard {
+    flex: 1;
+    padding: 2rem 1.5rem;
+}
+
+.contenido-dashboard h1 {
+    margin-top: 0;
+    font-size: 1.75rem;
+    color: var(--blanco);
+}
+
+.contenido-dashboard p {
+    color: var(--gris-texto);
+}
+
+/* Botón menú móvil */
+.btn-menu-mobile {
+    display: none;
+    padding: 0.5rem 0.75rem;
+    background: var(--gris-borde);
+    border: 1px solid var(--azul-electrico);
+    border-radius: 6px;
+    color: var(--blanco);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .btn-menu-mobile { display: block; }
+    .cabecera-dashboard .nav-dashboard {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--antracita);
+        border-bottom: 1px solid var(--gris-borde);
+        flex-direction: column;
+        padding: 1rem;
+        z-index: 199;
+    }
+    .cabecera-dashboard .nav-dashboard.nav-abierto {
+        display: flex;
+    }
+    .nav-secciones-cabecera {
+        flex-direction: column;
+        width: 100%;
+    }
+    .cabecera-dashboard.cabecera-reducida {
+        min-height: 52px;
+        padding: 0 0.75rem;
+    }
+    .cabecera-dashboard.cabecera-reducida .logo-cabecera-isotipo {
+        height: 40px;
+        width: 40px;
+        max-height: 40px;
+    }
+}

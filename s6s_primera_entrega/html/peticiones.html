@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peticiones — s6s</title>
+    <link rel="icon" type="image/png" href="{{ASSET_FAVICON}}">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <link rel="stylesheet" href="css/cabecera-nav.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/peticiones-wishlist.css">
+    <link rel="stylesheet" href="css/librerias-externas.css">
+    <link rel="stylesheet" href="css/otros.css">
+</head>
+<body class="pagina-dashboard" data-isotipo="{{ASSET_ISOTIPO}}">
+    <header class="cabecera-dashboard">
+        <div class="logo-cabecera">
+            <a href="index.php?accion={{ACCION_DASHBOARD}}" class="logo-cabecera-enlace" title="Ir al inicio">
+                <img src="{{ASSET_ISOTIPO}}" alt="s6s Inicio" class="logo-cabecera-isotipo">
+            </a>
+        </div>
+        <button type="button" class="btn-menu-mobile" id="btn-menu-mobile" aria-expanded="false" aria-controls="nav-principal" aria-label="Abrir menú">Menú</button>
+        <nav class="nav-dashboard" id="nav-principal">
+            <ul class="nav-secciones-cabecera" aria-label="Navegación rápida">
+                <li><a href="index.php?accion=inventario">Inventario</a></li>
+                <li><a href="index.php?accion=peticiones" class="activo">Peticiones</a></li>
+                {{ENLACE_ADMIN}}
+            </ul>
+            <span class="usuario-sesion">
+                <img src="{{ASSET_ISOTIPO}}" alt="" class="avatar-isotipo" aria-hidden="true">
+                {{NOMBRE_USUARIO}} <em>({{ROL_USUARIO}})</em>
+            </span>
+            <form method="post" action="index.php" class="form-logout">
+                <input type="hidden" name="accion" value="logout">
+                <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
+            </form>
+        </nav>
+    </header>
+    <main class="contenido-dashboard">
+        <h1>Peticiones</h1>
+        <p class="subtitulo-pagina">Solicitudes de material. Estados: Pendiente → En Revisión → Aprobado/Denegado → Entregado.</p>
+
+        {{BLOQUE_STAFF_PENDIENTES}}
+        {{BLOQUE_STAFF_REVISION}}
+        {{BLOQUE_STAFF_APROBADOS}}
+
+        <section class="bloque-peticiones form-nueva-solicitud-wrapper" aria-labelledby="titulo-nueva-solicitud">
+            <h2 id="titulo-nueva-solicitud">Nueva solicitud</h2>
+            <p class="color-gris">Solicita material desde aquí o desde el catálogo en Inventario.</p>
+            <form id="form-nueva-solicitud" class="form-nueva-solicitud">
+                <label for="nueva-solicitud-producto">Producto</label>
+                <select id="nueva-solicitud-producto" name="producto_id" required>
+                    <option value="">— Cargando… —</option>
+                </select>
+                <label for="nueva-solicitud-unidades">Unidades</label>
+                <input type="number" id="nueva-solicitud-unidades" name="unidades" min="1" value="1" required>
+                <label for="nueva-solicitud-prioridad">Prioridad</label>
+                <select id="nueva-solicitud-prioridad" name="prioridad">
+                    <option value="baja">Baja</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="alta">Alta</option>
+                </select>
+                <label for="nueva-solicitud-motivo">Motivo</label>
+                <textarea id="nueva-solicitud-motivo" name="motivo" rows="2" placeholder="Indica el motivo de la solicitud"></textarea>
+                <button type="submit" class="boton boton-primario">Enviar solicitud</button>
+            </form>
+        </section>
+
+        <section class="bloque-peticiones" aria-labelledby="titulo-mis">
+            <h2 id="titulo-mis">Mis solicitudes</h2>
+            <div class="filtro-estado-peticiones" id="filtro-mis-solicitudes">
+                <span class="filtros-etiqueta">Estado:</span>
+                <button type="button" class="boton boton-filtro-estado boton-filtro-activo" data-estado="">Todas</button>
+                <button type="button" class="boton boton-filtro-estado" data-estado="pendiente">Pendiente</button>
+                <button type="button" class="boton boton-filtro-estado" data-estado="en_revision">En revisión</button>
+                <button type="button" class="boton boton-filtro-estado" data-estado="aprobado">Aprobado</button>
+                <button type="button" class="boton boton-filtro-estado" data-estado="denegado">Denegado</button>
+                <button type="button" class="boton boton-filtro-estado" data-estado="entregado">Entregado</button>
+            </div>
+            <div id="contenedor-mis-peticiones">{{LISTA_MIS_PETICIONES}}</div>
+        </section>
+    </main>
+    {{FOOTER}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/peticiones.js"></script>
+</body>
+</html>

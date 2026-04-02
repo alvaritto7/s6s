@@ -1,0 +1,18 @@
+/**
+ * estilos.css — Punto de entrada único (reexporta todos los módulos).
+ * El proyecto usa varios archivos CSS por objetivo; las plantillas cargan
+ * los que necesitan. Este archivo existe por compatibilidad y para poder
+ * usar una sola referencia si se desea.
+ */
+@import url('base.css');
+@import url('componentes.css');
+@import url('auth.css');
+@import url('cabecera-nav.css');
+@import url('footer.css');
+@import url('dashboard.css');
+@import url('inventario.css');
+@import url('peticiones-wishlist.css');
+@import url('admin.css');
+@import url('mi-cuenta.css');
+@import url('librerias-externas.css');
+@import url('otros.css');

@@ -1,0 +1,787 @@
+<?php
+// Acceso a MySQL con PDO: esquema, consultas y datos iniciales si la BD está vacía.
+declare(strict_types=1);
+
+class BaseDeDatos
+{
+    private PDO $pdo;
+
+    /** Estados del flujo de trabajo (Workflow)*/
+    public const ESTADO_PENDIENTE   = 'pendiente';
+    public const ESTADO_EN_REVISION = 'en_revision';
+    public const ESTADO_APROBADO    = 'aprobado';
+    public const ESTADO_DENEGADO    = 'denegado';
+    public const ESTADO_ENTREGADO   = 'entregado';
+
+    public function __construct()
+    {
+        $opciones = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ];
+        $dsnSinDb = 'mysql:host=' . DB_HOST . ';charset=' . DB_CHARSET;
+        $this->pdo = new PDO($dsnSinDb, DB_USER, DB_PASS, $opciones);
+        $nombreDb = preg_replace('/[^a-zA-Z0-9_]/', '', DB_NAME);
+        $this->pdo->exec('CREATE DATABASE IF NOT EXISTS `' . $nombreDb . '` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+        $this->pdo->exec('USE `' . $nombreDb . '`');
+        $this->asegurarEsquemaYSeed();
+    }
+
+    /**
+     * Crea las tablas si no existen e inserta datos de prueba si están vacías.
+     */
+    private function asegurarEsquemaYSeed(): void
+    {
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `usuarios` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `email` varchar(255) NOT NULL,
+                `password` varchar(255) NOT NULL,
+                `nombre` varchar(255) NOT NULL DEFAULT '',
+                `rol` enum('administrador','staff','empleado') NOT NULL DEFAULT 'empleado',
+                `activo` tinyint(1) NOT NULL DEFAULT 1,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `email` (`email`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `categorias` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `nombre` varchar(100) NOT NULL,
+                `slug` varchar(100) NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `slug` (`slug`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `productos` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `nombre` varchar(200) NOT NULL,
+                `descripcion` varchar(500) DEFAULT '',
+                `categoria_id` int(11) unsigned NOT NULL,
+                `stock` int(11) NOT NULL DEFAULT 0,
+                `umbral_critico` int(11) NOT NULL DEFAULT 0,
+                `imagen` varchar(255) DEFAULT '',
+                `activo` tinyint(1) NOT NULL DEFAULT 1,
+                PRIMARY KEY (`id`),
+                KEY `categoria_id` (`categoria_id`),
+                KEY `activo` (`activo`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `pedidos` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `usuario_id` int(11) unsigned NOT NULL,
+                `producto_id` int(11) unsigned NOT NULL,
+                `unidades` int(11) NOT NULL DEFAULT 1,
+                `prioridad` enum('baja','normal','alta') NOT NULL DEFAULT 'normal',
+                `motivo` varchar(500) DEFAULT '',
+                `estado` enum('pendiente','en_revision','aprobado','denegado','entregado') NOT NULL DEFAULT 'pendiente',
+                `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `fecha_actualizacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `usuario_id` (`usuario_id`),
+                KEY `producto_id` (`producto_id`),
+                KEY `estado` (`estado`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `propuestas_wishlist` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `titulo` varchar(200) NOT NULL,
+                `descripcion` text,
+                `estado` varchar(30) NOT NULL DEFAULT 'en_estudio',
+                `usuario_id` int(11) unsigned NOT NULL,
+                `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `usuario_id` (`usuario_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `votos` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `propuesta_id` int(11) unsigned NOT NULL,
+                `usuario_id` int(11) unsigned NOT NULL,
+                `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `propuesta_usuario` (`propuesta_id`,`usuario_id`),
+                KEY `propuesta_id` (`propuesta_id`),
+                KEY `usuario_id` (`usuario_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS `comentarios_propuesta` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `propuesta_id` int(11) unsigned NOT NULL,
+                `usuario_id` int(11) unsigned NOT NULL,
+                `texto` text NOT NULL,
+                `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `fecha_actualizacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `propuesta_id` (`propuesta_id`),
+                KEY `usuario_id` (`usuario_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        $this->asegurarColumnaEstadoPropuestas();
+
+        if ($this->queryOne('SELECT 1 FROM usuarios LIMIT 1') === null) {
+            $this->pdo->exec("
+                INSERT INTO usuarios (email, password, nombre, rol, activo) VALUES
+                ('admin@s6s.local', 'admin', 'Administrador s6s', 'administrador', 1),
+                ('staff@s6s.local', 'admin', 'Staff Almacén', 'staff', 1),
+                ('empleado@s6s.local', 'password', 'Empleado Prueba', 'empleado', 1),
+                ('a@uem.es', 'empleado', 'Usuario demo', 'empleado', 1)
+            ");
+        }
+        if ($this->queryOne('SELECT 1 FROM categorias LIMIT 1') === null) {
+            $this->pdo->exec("INSERT INTO categorias (id, nombre, slug) VALUES (1, 'IT', 'it'), (2, 'Mobiliario', 'mobiliario'), (3, 'Consumibles', 'consumibles')");
+        }
+        if ($this->queryOne('SELECT 1 FROM productos LIMIT 1') === null) {
+            $this->pdo->exec("
+                INSERT INTO productos (nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo) VALUES
+                ('Portátil Dell', 'Portátil 15\", 8GB RAM', 1, 5, 2, '', 1),
+                ('Monitor LG 24\"', 'Monitor Full HD', 1, 10, 3, '', 1),
+                ('Teclado inalámbrico', 'Teclado QWERTY español', 1, 15, 5, '', 1),
+                ('Ratón inalámbrico', 'Ratón ergonómico USB', 1, 25, 5, '', 1),
+                ('Papel A4', 'Resma 500 hojas', 3, 50, 10, '', 1),
+                ('Bolígrafos', 'Pack 10 unidades', 3, 3, 5, '', 1),
+                ('Silla ergonómica', 'Silla oficina regulable', 2, 20, 5, '', 1),
+                ('Monitor CRT 17\"', 'Obsoleto', 1, 0, 0, '', 0)
+            ");
+        }
+        if ($this->queryOne('SELECT 1 FROM pedidos LIMIT 1') === null) {
+            $this->pdo->exec("
+                INSERT INTO pedidos (usuario_id, producto_id, unidades, prioridad, motivo, estado) VALUES
+                (3, 1, 1, 'normal', 'Nuevo puesto', 'pendiente'),
+                (4, 2, 1, 'alta', 'Sustitución monitor', 'pendiente'),
+                (3, 5, 1, 'normal', 'Teletrabajo', 'en_revision'),
+                (4, 7, 1, 'normal', 'Silla ergonómica', 'en_revision'),
+                (3, 2, 1, 'normal', 'Segundo monitor', 'aprobado'),
+                (4, 3, 2, 'baja', 'Teclados sala', 'aprobado'),
+                (3, 1, 1, 'alta', 'Proyecto', 'denegado'),
+                (4, 6, 1, 'normal', 'Material oficina', 'entregado')
+            ");
+        }
+    }
+
+    /** Añade la columna estado a propuestas_wishlist si no existe (en_estudio, aceptada, descartada). */
+    private function asegurarColumnaEstadoPropuestas(): void
+    {
+        $columnas = $this->pdo->query("SHOW COLUMNS FROM propuestas_wishlist")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('estado', $columnas, true)) {
+            $this->pdo->exec("ALTER TABLE propuestas_wishlist ADD COLUMN estado VARCHAR(30) NOT NULL DEFAULT 'en_estudio' AFTER descripcion");
+        }
+    }
+
+    /**
+     * Ejecuta una consulta SELECT y devuelve todas las filas como array asociativo.
+     */
+    private function query(string $sql, array $params = []): array
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $rows ?: [];
+    }
+
+    /**
+     * Ejecuta una consulta y devuelve una sola fila o null.
+     */
+    private function queryOne(string $sql, array $params = []): ?array
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    /**
+     * Ejecuta INSERT y devuelve lastInsertId.
+     */
+    private function execute(string $sql, array $params = []): void
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+    }
+
+    private function executeUpdate(string $sql, array $params = []): bool
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount() > 0;
+    }
+
+    // -------------------------------------------------------------------------
+    // USUARIOS
+    // -------------------------------------------------------------------------
+
+    public function obtenerUsuarios(): array
+    {
+        return $this->query('SELECT id, email, password, nombre, rol, activo FROM usuarios ORDER BY id');
+    }
+
+    public function obtenerUsuarioPorId(int $id): ?array
+    {
+        return $this->queryOne('SELECT id, email, password, nombre, rol, activo FROM usuarios WHERE id = ?', [$id]);
+    }
+
+    public function obtenerUsuarioPorEmail(string $email): ?array
+    {
+        return $this->queryOne('SELECT id, email, password, nombre, rol, activo FROM usuarios WHERE email = ?', [$email]);
+    }
+
+    public function guardarUsuarios(array $usuarios): bool
+    {
+        $this->pdo->beginTransaction();
+        try {
+            foreach ($usuarios as $u) {
+                $id = (int) ($u['id'] ?? 0);
+                if ($id > 0) {
+                    $this->executeUpdate(
+                        'UPDATE usuarios SET email = ?, password = ?, nombre = ?, rol = ?, activo = ? WHERE id = ?',
+                        [
+                            $u['email'] ?? '',
+                            $u['password'] ?? $u['password_hash'] ?? '',
+                            $u['nombre'] ?? '',
+                            $u['rol'] ?? 'empleado',
+                            isset($u['activo']) ? (int) (bool) $u['activo'] : 1,
+                            $id,
+                        ]
+                    );
+                } else {
+                    $this->execute(
+                        'INSERT INTO usuarios (email, password, nombre, rol, activo) VALUES (?, ?, ?, ?, ?)',
+                        [
+                            $u['email'] ?? '',
+                            $u['password'] ?? $u['password_hash'] ?? '',
+                            $u['nombre'] ?? '',
+                            $u['rol'] ?? 'empleado',
+                            isset($u['activo']) ? (int) (bool) $u['activo'] : 1,
+                        ]
+                    );
+                }
+            }
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function insertarUsuario(array $datosUsuario): int
+    {
+        $this->execute(
+            'INSERT INTO usuarios (email, password, nombre, rol, activo) VALUES (?, ?, ?, ?, ?)',
+            [
+                $datosUsuario['email'] ?? '',
+                $datosUsuario['password'] ?? $datosUsuario['password_hash'] ?? '',
+                $datosUsuario['nombre'] ?? '',
+                $datosUsuario['rol'] ?? 'empleado',
+                isset($datosUsuario['activo']) ? (int) (bool) $datosUsuario['activo'] : 1,
+            ]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function actualizarUsuario(int $id, array $datosActualizados): bool
+    {
+        $campos = [];
+        $params = [];
+        $permitidos = ['email', 'password', 'nombre', 'rol', 'activo'];
+        foreach ($permitidos as $campo) {
+            if (array_key_exists($campo, $datosActualizados)) {
+                $campos[] = "`$campo` = ?";
+                $params[] = $campo === 'activo' ? (int) (bool) $datosActualizados[$campo] : $datosActualizados[$campo];
+            }
+        }
+        if (empty($campos)) {
+            return true;
+        }
+        $params[] = $id;
+        return $this->executeUpdate('UPDATE usuarios SET ' . implode(', ', $campos) . ' WHERE id = ?', $params);
+    }
+
+    /**
+     * Elimina un usuario por ID. No comprueba integridad referencial (pedidos/propuestas quedan con usuario_id huérfano).
+     * No usar para el usuario actual en sesión; validar en el controlador.
+     */
+    public function eliminarUsuario(int $id): bool
+    {
+        return $this->executeUpdate('DELETE FROM usuarios WHERE id = ?', [$id]);
+    }
+
+    // -------------------------------------------------------------------------
+    // CATEGORÍAS
+    // -------------------------------------------------------------------------
+
+    public function obtenerCategorias(): array
+    {
+        return $this->query('SELECT id, nombre, slug FROM categorias ORDER BY id');
+    }
+
+    public function obtenerCategoriaPorId(int $id): ?array
+    {
+        return $this->queryOne('SELECT id, nombre, slug FROM categorias WHERE id = ?', [$id]);
+    }
+
+    // -------------------------------------------------------------------------
+    // PRODUCTOS (INVENTARIO)
+    // -------------------------------------------------------------------------
+
+    public function obtenerProductos(): array
+    {
+        $rows = $this->query('SELECT id, nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo FROM productos ORDER BY id');
+        return $this->normalizarActivo($rows);
+    }
+
+    public function obtenerProductosPorCategoria($categoriaIdOSlug): array
+    {
+        $categorias = $this->obtenerCategorias();
+        $idBuscado = null;
+        foreach ($categorias as $cat) {
+            if ((string) ($cat['id'] ?? '') === (string) $categoriaIdOSlug || ($cat['slug'] ?? '') === $categoriaIdOSlug) {
+                $idBuscado = (int) $cat['id'];
+                break;
+            }
+        }
+        if ($idBuscado === null) {
+            return [];
+        }
+        $rows = $this->query('SELECT id, nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo FROM productos WHERE categoria_id = ? ORDER BY id', [$idBuscado]);
+        return $this->normalizarActivo($rows);
+    }
+
+    public function obtenerProductoPorId(int $id): ?array
+    {
+        $row = $this->queryOne('SELECT id, nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo FROM productos WHERE id = ?', [$id]);
+        return $row ? $this->normalizarActivo([$row])[0] : null;
+    }
+
+    private function normalizarActivo(array $rows): array
+    {
+        foreach ($rows as &$r) {
+            $r['activo'] = isset($r['activo']) ? (bool) (int) $r['activo'] : true;
+        }
+        unset($r);
+        return $rows;
+    }
+
+    public function guardarProductos(array $productos): bool
+    {
+        $this->pdo->beginTransaction();
+        try {
+            foreach ($productos as $p) {
+                $id = (int) ($p['id'] ?? 0);
+                $activo = isset($p['activo']) ? (int) (bool) $p['activo'] : 1;
+                if ($id > 0) {
+                    $this->executeUpdate(
+                        'UPDATE productos SET nombre = ?, descripcion = ?, categoria_id = ?, stock = ?, umbral_critico = ?, imagen = ?, activo = ? WHERE id = ?',
+                        [
+                            $p['nombre'] ?? '',
+                            $p['descripcion'] ?? '',
+                            (int) ($p['categoria_id'] ?? 0),
+                            (int) ($p['stock'] ?? 0),
+                            (int) ($p['umbral_critico'] ?? 0),
+                            $p['imagen'] ?? '',
+                            $activo,
+                            $id,
+                        ]
+                    );
+                } else {
+                    $this->execute(
+                        'INSERT INTO productos (nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                        [
+                            $p['nombre'] ?? '',
+                            $p['descripcion'] ?? '',
+                            (int) ($p['categoria_id'] ?? 0),
+                            (int) ($p['stock'] ?? 0),
+                            (int) ($p['umbral_critico'] ?? 0),
+                            $p['imagen'] ?? '',
+                            $activo,
+                        ]
+                    );
+                }
+            }
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function insertarProducto(array $datosProducto): int
+    {
+        $activo = isset($datosProducto['activo']) ? (int) (bool) $datosProducto['activo'] : 1;
+        $this->execute(
+            'INSERT INTO productos (nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [
+                $datosProducto['nombre'] ?? '',
+                $datosProducto['descripcion'] ?? '',
+                (int) ($datosProducto['categoria_id'] ?? 0),
+                (int) ($datosProducto['stock'] ?? 0),
+                (int) ($datosProducto['umbral_critico'] ?? 0),
+                $datosProducto['imagen'] ?? '',
+                $activo,
+            ]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function actualizarProducto(int $id, array $datosActualizados): bool
+    {
+        $campos = [];
+        $params = [];
+        $permitidos = ['nombre', 'descripcion', 'categoria_id', 'stock', 'umbral_critico', 'imagen', 'activo'];
+        foreach ($permitidos as $campo) {
+            if (array_key_exists($campo, $datosActualizados)) {
+                $campos[] = "`$campo` = ?";
+                $params[] = $campo === 'activo' ? (int) (bool) $datosActualizados[$campo] : ($campo === 'stock' || $campo === 'umbral_critico' || $campo === 'categoria_id' ? (int) $datosActualizados[$campo] : $datosActualizados[$campo]);
+            }
+        }
+        if (empty($campos)) {
+            return true;
+        }
+        $params[] = $id;
+        return $this->executeUpdate('UPDATE productos SET ' . implode(', ', $campos) . ' WHERE id = ?', $params);
+    }
+
+    public function eliminarProducto(int $id): bool
+    {
+        return $this->actualizarProducto($id, ['activo' => false]);
+    }
+
+    public function obtenerProductosBajoUmbral(): array
+    {
+        $rows = $this->query(
+            'SELECT id, nombre, descripcion, categoria_id, stock, umbral_critico, imagen, activo FROM productos WHERE activo = 1 AND umbral_critico > 0 AND stock <= umbral_critico ORDER BY stock ASC'
+        );
+        return $this->normalizarActivo($rows);
+    }
+
+    /**
+     * Precio unitario simulado para informes. No se guarda en BD; se calcula en PHP.
+     * Permite que los PDF de inventario/pedidos muestren valor económico.
+     */
+    public function obtenerPrecioUnitarioSimulado(int $productoId): float
+    {
+        // Mapa básico de precios para algunos productos conocidos
+        $precios = [
+            1 => 950.00,  // Portátil Dell
+            2 => 180.00,  // Monitor LG 24"
+            3 => 35.00,   // Teclado inalámbrico
+            4 => 25.00,   // Ratón inalámbrico
+            5 => 60.00,   // Webcam HD
+            6 => 80.00,   // Disco duro externo
+            7 => 220.00,  // Silla ergonómica
+            8 => 150.00,  // Escritorio
+            9 => 120.00,  // Armario archivador
+            10 => 45.00,  // Lámpara escritorio
+            11 => 90.00,  // Estantería
+            12 => 4.50,   // Papel A4
+            13 => 3.00,   // Bolígrafos
+            14 => 75.00,  // Toner impresora
+            15 => 2.50,   // Carpeta archivador
+            16 => 5.00,   // Bloc Pos-it
+            17 => 12.00,  // Grapadora metálica
+        ];
+        if (isset($precios[$productoId])) {
+            return $precios[$productoId];
+        }
+        // Precio por defecto para productos nuevos: evita romper cálculos
+        return 50.00;
+    }
+
+    // -------------------------------------------------------------------------
+    // PEDIDOS / SOLICITUDES
+    // -------------------------------------------------------------------------
+
+    public function obtenerPedidos(): array
+    {
+        return $this->query('SELECT id, usuario_id, producto_id, unidades, prioridad, motivo, estado, fecha_creacion, fecha_actualizacion FROM pedidos ORDER BY id DESC');
+    }
+
+    public function obtenerPedidosPorUsuario(int $usuarioId): array
+    {
+        return $this->query(
+            'SELECT id, usuario_id, producto_id, unidades, prioridad, motivo, estado, fecha_creacion, fecha_actualizacion FROM pedidos WHERE usuario_id = ? ORDER BY fecha_creacion DESC',
+            [$usuarioId]
+        );
+    }
+
+    /** Pedidos recientes del usuario con nombre del producto. Limit por defecto 10. */
+    public function obtenerPedidosRecientesConProducto(int $usuarioId, int $limit = 10): array
+    {
+        $limit = max(1, min(50, $limit));
+        return $this->query(
+            'SELECT pe.id, pe.usuario_id, pe.producto_id, pe.unidades, pe.prioridad, pe.motivo, pe.estado, pe.fecha_creacion,
+                    pr.nombre AS producto_nombre
+             FROM pedidos pe
+             LEFT JOIN productos pr ON pr.id = pe.producto_id
+             WHERE pe.usuario_id = ?
+             ORDER BY pe.fecha_creacion DESC
+             LIMIT ' . $limit,
+            [$usuarioId]
+        );
+    }
+
+    public function obtenerPedidosPorEstado(string $estado): array
+    {
+        return $this->query(
+            'SELECT id, usuario_id, producto_id, unidades, prioridad, motivo, estado, fecha_creacion, fecha_actualizacion FROM pedidos WHERE estado = ? ORDER BY fecha_creacion ASC',
+            [$estado]
+        );
+    }
+
+    public function obtenerPedidoPorId(int $id): ?array
+    {
+        return $this->queryOne('SELECT id, usuario_id, producto_id, unidades, prioridad, motivo, estado, fecha_creacion, fecha_actualizacion FROM pedidos WHERE id = ?', [$id]);
+    }
+
+    public function guardarPedidos(array $pedidos): bool
+    {
+        // No se usa en flujo actual; los pedidos se insertan/actualizan individualmente
+        return true;
+    }
+
+    public function insertarPedido(array $datosPedido): int
+    {
+        $estado = $datosPedido['estado'] ?? self::ESTADO_PENDIENTE;
+        $this->execute(
+            'INSERT INTO pedidos (usuario_id, producto_id, unidades, prioridad, motivo, estado) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+                (int) ($datosPedido['usuario_id'] ?? 0),
+                (int) ($datosPedido['producto_id'] ?? 0),
+                (int) ($datosPedido['unidades'] ?? 1),
+                in_array($datosPedido['prioridad'] ?? '', ['baja', 'normal', 'alta'], true) ? $datosPedido['prioridad'] : 'normal',
+                $datosPedido['motivo'] ?? '',
+                $estado,
+            ]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function obtenerUnidadesReservadas(int $productoId): int
+    {
+        $row = $this->queryOne(
+            'SELECT COALESCE(SUM(unidades), 0) AS total FROM pedidos WHERE producto_id = ? AND estado IN (?, ?)',
+            [$productoId, self::ESTADO_PENDIENTE, self::ESTADO_EN_REVISION]
+        );
+        return (int) ($row['total'] ?? 0);
+    }
+
+    public function obtenerStockDisponible(int $productoId): int
+    {
+        $producto = $this->obtenerProductoPorId($productoId);
+        if (!$producto) {
+            return 0;
+        }
+        $stock = (int) ($producto['stock'] ?? 0);
+        $reservado = $this->obtenerUnidadesReservadas($productoId);
+        return max(0, $stock - $reservado);
+    }
+
+    public function actualizarPedido(int $id, array $datosActualizados): bool
+    {
+        $pedido = $this->obtenerPedidoPorId($id);
+        if (!$pedido) {
+            return false;
+        }
+        $nuevoEstado = $datosActualizados['estado'] ?? $pedido['estado'];
+        $productoId = (int) ($pedido['producto_id'] ?? 0);
+        $unidades = (int) ($pedido['unidades'] ?? 0);
+
+        $campos = [];
+        $params = [];
+        if (isset($datosActualizados['estado'])) {
+            $campos[] = 'estado = ?';
+            $params[] = $datosActualizados['estado'];
+        }
+        if (empty($campos)) {
+            return true;
+        }
+        $params[] = $id;
+        if (!$this->executeUpdate('UPDATE pedidos SET ' . implode(', ', $campos) . ', fecha_actualizacion = NOW() WHERE id = ?', $params)) {
+            return false;
+        }
+        if ($nuevoEstado === self::ESTADO_ENTREGADO && $productoId > 0 && $unidades > 0) {
+            $producto = $this->obtenerProductoPorId($productoId);
+            if ($producto) {
+                $stockActual = (int) ($producto['stock'] ?? 0);
+                $this->actualizarProducto($productoId, ['stock' => max(0, $stockActual - $unidades)]);
+            }
+        }
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // WISHLIST (propuestas y votos)
+    // -------------------------------------------------------------------------
+
+    public function obtenerPropuestas(): array
+    {
+        return $this->query('SELECT id, titulo, descripcion, COALESCE(estado, \'en_estudio\') AS estado, usuario_id, fecha_creacion FROM propuestas_wishlist ORDER BY id DESC');
+    }
+
+    public function obtenerPropuestaPorId(int $id): ?array
+    {
+        return $this->queryOne('SELECT id, titulo, descripcion, COALESCE(estado, \'en_estudio\') AS estado, usuario_id, fecha_creacion FROM propuestas_wishlist WHERE id = ?', [$id]);
+    }
+
+    public function insertarPropuesta(array $datosPropuesta): int
+    {
+        $this->execute(
+            'INSERT INTO propuestas_wishlist (titulo, descripcion, usuario_id) VALUES (?, ?, ?)',
+            [
+                $datosPropuesta['titulo'] ?? '',
+                $datosPropuesta['descripcion'] ?? '',
+                (int) ($datosPropuesta['usuario_id'] ?? 0),
+            ]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    /** Valores permitidos: en_estudio, aceptada, descartada. */
+    public function actualizarEstadoPropuesta(int $propuestaId, string $estado): bool
+    {
+        $estado = preg_replace('/[^a-z_]/', '', $estado);
+        if (!in_array($estado, ['en_estudio', 'aceptada', 'descartada'], true)) {
+            return false;
+        }
+        return $this->executeUpdate('UPDATE propuestas_wishlist SET estado = ? WHERE id = ?', [$estado, $propuestaId]);
+    }
+
+    /** Número de propuestas en estado en_estudio (para avisos del dashboard admin). */
+    public function contarPropuestasEnEstudio(): int
+    {
+        $row = $this->queryOne("SELECT COUNT(*) AS total FROM propuestas_wishlist WHERE COALESCE(estado, 'en_estudio') = 'en_estudio'");
+        return (int) ($row['total'] ?? 0);
+    }
+
+    public function obtenerVotos(): array
+    {
+        return $this->query('SELECT id, propuesta_id, usuario_id, fecha FROM votos');
+    }
+
+    public function contarVotosPorPropuesta(int $propuestaId): int
+    {
+        $row = $this->queryOne('SELECT COUNT(*) AS total FROM votos WHERE propuesta_id = ?', [$propuestaId]);
+        return (int) ($row['total'] ?? 0);
+    }
+
+    public function usuarioYaVoto(int $propuestaId, int $usuarioId): bool
+    {
+        $row = $this->queryOne('SELECT 1 FROM votos WHERE propuesta_id = ? AND usuario_id = ?', [$propuestaId, $usuarioId]);
+        return $row !== null;
+    }
+
+    public function insertarVoto(int $propuestaId, int $usuarioId): bool
+    {
+        if ($this->usuarioYaVoto($propuestaId, $usuarioId)) {
+            return false;
+        }
+        $this->execute('INSERT INTO votos (propuesta_id, usuario_id) VALUES (?, ?)', [$propuestaId, $usuarioId]);
+        return true;
+    }
+
+    /** Elimina el voto del usuario en la propuesta. Devuelve true si se eliminó. */
+    public function eliminarVoto(int $propuestaId, int $usuarioId): bool
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM votos WHERE propuesta_id = ? AND usuario_id = ?');
+        $stmt->execute([$propuestaId, $usuarioId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function obtenerPropuestasOrdenadasPorVotos(): array
+    {
+        $propuestas = $this->query(
+            'SELECT p.id, p.titulo, p.descripcion, COALESCE(p.estado, \'en_estudio\') AS estado, p.usuario_id, p.fecha_creacion,
+                    (SELECT COUNT(*) FROM votos v WHERE v.propuesta_id = p.id) AS votos
+             FROM propuestas_wishlist p
+             ORDER BY votos DESC, p.fecha_creacion DESC'
+        );
+        foreach ($propuestas as &$p) {
+            $p['votos'] = (int) ($p['votos'] ?? 0);
+        }
+        unset($p);
+        return $propuestas;
+    }
+
+    // -------------------------------------------------------------------------
+    // COMENTARIOS EN PROPUESTAS
+    // -------------------------------------------------------------------------
+
+    public function obtenerComentariosPorPropuesta(int $propuestaId): array
+    {
+        $rows = $this->query(
+            'SELECT c.id, c.propuesta_id, c.usuario_id, c.texto, c.fecha_creacion, c.fecha_actualizacion,
+                    u.nombre AS autor_nombre
+             FROM comentarios_propuesta c
+             LEFT JOIN usuarios u ON u.id = c.usuario_id
+             WHERE c.propuesta_id = ?
+             ORDER BY c.fecha_creacion ASC',
+            [$propuestaId]
+        );
+        return $rows;
+    }
+
+    public function insertarComentario(int $propuestaId, int $usuarioId, string $texto): int
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return 0;
+        }
+        $this->execute(
+            'INSERT INTO comentarios_propuesta (propuesta_id, usuario_id, texto) VALUES (?, ?, ?)',
+            [$propuestaId, $usuarioId, $texto]
+        );
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    /** Solo el autor puede editar. Devuelve true si se actualizó. */
+    public function actualizarComentario(int $comentarioId, int $usuarioId, string $texto): bool
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return false;
+        }
+        return $this->executeUpdate(
+            'UPDATE comentarios_propuesta SET texto = ?, fecha_actualizacion = NOW() WHERE id = ? AND usuario_id = ?',
+            [$texto, $comentarioId, $usuarioId]
+        );
+    }
+
+    public function obtenerComentarioPorId(int $id): ?array
+    {
+        return $this->queryOne(
+            'SELECT c.id, c.propuesta_id, c.usuario_id, c.texto, c.fecha_creacion, u.nombre AS autor_nombre
+             FROM comentarios_propuesta c
+             LEFT JOIN usuarios u ON u.id = c.usuario_id
+             WHERE c.id = ?',
+            [$id]
+        );
+    }
+
+    /**
+     * Propuestas en las que el usuario participó (creó o votó). Limit por defecto 10.
+     * Cada fila incluye id, titulo, estado, fecha_creacion, votos, participacion ('autor'|'voto').
+     */
+    public function obtenerPropuestasConParticipacionUsuario(int $usuarioId, int $limit = 10): array
+    {
+        $sql = "SELECT p.id, p.titulo, COALESCE(p.estado, 'en_estudio') AS estado, p.fecha_creacion,
+                (SELECT COUNT(*) FROM votos v WHERE v.propuesta_id = p.id) AS votos,
+                CASE WHEN p.usuario_id = ? THEN 'autor' ELSE 'voto' END AS participacion
+                FROM propuestas_wishlist p
+                WHERE p.usuario_id = ?
+                   OR EXISTS (SELECT 1 FROM votos v WHERE v.propuesta_id = p.id AND v.usuario_id = ?)
+                ORDER BY p.fecha_creacion DESC
+                LIMIT " . max(1, min(50, $limit));
+        $rows = $this->query($sql, [$usuarioId, $usuarioId, $usuarioId]);
+        foreach ($rows as &$r) {
+            $r['votos'] = (int) ($r['votos'] ?? 0);
+        }
+        unset($r);
+        return $rows;
+    }
+}
